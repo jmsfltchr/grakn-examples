@@ -1,0 +1,57 @@
+define
+
+mode sub attribute datatype string;
+type sub attribute datatype string;
+direction sub attribute datatype string;
+name sub attribute datatype string;
+service-type sub attribute datatype string;
+naptan-id sub attribute datatype string;
+
+#date sub attribute datatype string;
+valid-from sub attribute datatype date;
+valid-to sub attribute datatype date;
+
+mode-of-transport sub entity,
+    plays operated-by,
+    has name;
+
+has-operation sub relationship,
+    relates operated-by,
+    relates operates;
+
+has-stops sub relationship,
+    relates has-route-section,
+    relates origin,
+    relates destination;
+
+route sub entity,
+    plays operates,
+    has mode,
+    has name;
+
+route-section sub entity,
+    plays has-route-section,
+    has direction,
+    has name,
+    has service-type,
+    has valid-from,
+    has valid-to;
+
+stop sub entity,
+    plays origin,
+    plays destination,
+    #plays intermediate
+	has naptan-id,  # make an Id later
+    has name;
+	# has latitude,
+	# has longitude;
+
+origin sub role; destination sub role; has-route-section sub role;
+operated-by sub role; operates sub role;
+
+#tube_station sub stop;
+#bus_stop sub stop;
+#bus_station sub bus_stop; # maybe relates multiple bus stops instead 
+# ./grakn migrate json -i ./all_routes_migration.gql -n <output.txt>
+# ./graql migrate csv -i src/dataset.csv -t src/dataset-migrator.gql -k grakn --no > src/datasets.gql
+# ./graql migrate json -i datasets/tfl/api_data/all_routes.json -t src/dataset-migrator.gql -k grakn --no > src/datasets.gql
