@@ -65,7 +65,7 @@ def import_query_generator():
             # Relate the route to the mode of transport
             yield "match $mode isa mode-of-transport has name \"" + route['modeName'] + "\";\n" + \
                 "insert $route isa route has name \"" + route['name'] + "\";\n" + \
-                "(operated-by: $mode, operates: $route) isa has-operation;\n"
+                "(operated-by: $mode, operates: $route) isa operation;\n"
 
             for routeSection, symbol2 in zip(route["routeSections"], symbol_generator()):
 

@@ -1,7 +1,5 @@
 define
 
-mode sub attribute datatype string;
-type sub attribute datatype string;
 direction sub attribute datatype string;
 name sub attribute datatype string;
 service-type sub attribute datatype string;
@@ -15,39 +13,70 @@ mode-of-transport sub entity,
     plays operated-by,
     has name;
 
-has-operation sub relationship,
+operation sub relationship,
     relates operated-by,
     relates operates;
 
-has-stops sub relationship,
+has-stops sub relationship, # This naming is wrong
     relates has-route-section,
     relates origin,
     relates destination;
 
 route sub entity,
     plays operates,
-    has mode,
+    plays composes,
     has name;
 
 route-section sub entity,
     plays has-route-section,
+    plays comprises,
     has direction,
     has name,
     has service-type,
     has valid-from,
     has valid-to;
 
+composition sub relationship,
+    relates comprises,
+    relates composes;
+
 stop sub entity,
     plays origin,
     plays destination,
-    #plays intermediate
+    plays connected-stop,
 	has naptan-id,  # make an Id later
     has name;
-	# has latitude,
-	# has longitude;
 
 origin sub role; destination sub role; has-route-section sub role;
 operated-by sub role; operates sub role;
+
+connection sub relationship,
+    relates connected-stop;
+
+direct-connection sub connection,
+    relates connected-stop;
+
+indirect-connection sub connection,
+    relates connected-stop;
+
+directly-connected sub rule
+    when {
+        $origin-1 isa stop; $destination-1 isa stop; $route-section-1 isa route-section; 
+        }
+    then {
+        (connected-stop: $origin-1, connected-stop: $destination-1) isa direct-connection;
+    };
+
+indirectly-connected sub rule
+    when {
+        $origin isa stop; $change isa stop;
+        $change isa stop; $destination isa stop;
+        (connected-stop: $origin, connected-stop: $change) isa connection;
+        (connected-stop: $change, connected-stop: $destination) isa connection;
+    }
+    then {
+        (connected-stop: $origin, connected-stop: $destination) isa indirect-connection;
+    };
 
 #tube_station sub stop;
 #bus_stop sub stop;
