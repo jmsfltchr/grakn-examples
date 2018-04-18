@@ -61,27 +61,24 @@ def import_query_generator():
             yield "insert " + mode_of_transport_var + " isa mode-of-transport has name \"" + mode_name + "\";\n"
 
         for route, symbol in zip(routes_generator(routes), symbol_generator()):
-            route_var = "$route" + symbol
-            yield "insert " + route_var + " isa route has name \"" + route['name'] + "\";\n"
 
             # Relate the route to the mode of transport
-            mode_of_transport_var = mode_of_transport_vars[route['modeName']]
-            yield "insert " + "(operated-by: " + mode_of_transport_var + ", operates: " + route_var + ") isa has-operation;\n"
+            yield "match $mode isa mode-of-transport has name \"" + route['modeName'] + "\";\n" + \
+                "insert $route isa route has name \"" + route['name'] + "\";\n" + \
+                "(operated-by: $mode, operates: $route) isa has-operation;\n"
 
             for routeSection, symbol2 in zip(route["routeSections"], symbol_generator()):
-                route_section_var = "$route-section" + symbol + "-" + symbol2
-                yield "insert " + route_section_var + \
-                                " isa route-section has name \"" + routeSection['name'] + \
-                                "\" has direction \"" + routeSection['direction'] + \
-                                "\" has service-type \"" + routeSection['serviceType'] + \
-                                "\" has valid-from \"" + routeSection['validFrom'] + \
-                                "\" has valid-to \"" + routeSection['validTo'] + "\";\n"
 
-                # Look up the variable for the origin and destination stops
-                origin_stop_var = stop_vars[routeSection['originator']]
-                destination_stop_var = stop_vars[routeSection['destination']]
                 # Add the relationship
-                yield "insert " + "(origin: " + origin_stop_var + ", destination: " + destination_stop_var + ", has-route-section: " + route_section_var + ") isa has-stops;\n"
+                yield "match $origin isa stop has naptan-id \"" + routeSection['originator'] + \
+                      "\"; $destination isa stop has naptan-id \"" + routeSection['destination'] + "\";" + \
+                    "insert $route-section isa route-section has name \"" + routeSection['name'] + \
+                      "\" has direction \"" + routeSection['direction'] + \
+                      "\" has service-type \"" + routeSection['serviceType'] + \
+                      "\" has valid-from " + routeSection['validFrom'][:-1] + \
+                      " has valid-to " + routeSection['validTo'][:-1] + ";\n" + \
+                      "\n(origin: $origin, destination: $destination, has-route-section: $route-section) " \
+                                    "isa has-stops;\n"
 
 
 client = grakn.Client(uri='http://localhost:4567', keyspace='transportation_example')
@@ -92,4 +89,3 @@ for query in import_query_generator():
     print("---")
     # Feed the insert queries line-by-line
     client.execute(query)
-    
