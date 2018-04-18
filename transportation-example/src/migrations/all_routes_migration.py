@@ -25,7 +25,7 @@ def import_all_routes_graql():
     :return:
     """
 
-    s = "../../../datasets/tfl/api_data/all_routes.json"
+    s = "../../datasets/tfl_api/all_routes.json"
 
     with open(s, 'r') as f:
         routes = json.load(f)
