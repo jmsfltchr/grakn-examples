@@ -13,13 +13,6 @@ def route_sections_generator(routes):
             yield route, routeSection
 
 
-def symbol_generator():
-    i = 0
-    while 1:
-        yield str(i)
-        i += 1
-
-
 def import_query_generator():
     """
     Builds the Grakl statements required to import the transportation data contained in all_routes.json
@@ -30,63 +23,64 @@ def import_query_generator():
 
     with open(s, 'r') as f:
         routes = json.load(f)
-        # print(obj)
-        # print(routes[0])
-        # print(obj[0]['routeSections'])
 
         # ===== STOPS =====
         stops = dict()  # Create a dict of stops for all modes of transport so that we can't duplicate them, using the
         # stop's naptan Id as the key
 
         for route, routeSection in route_sections_generator(routes):
-
             stops[routeSection['originator']] = routeSection['originationName']
             stops[routeSection['destination']] = routeSection['destinationName']
 
-        stop_vars = dict()  # Store the variables used for each stop for use later on to associate the routes
-        for (naptan_id, name), symbol in zip(stops.items(), symbol_generator()):
-            stop_var = "$stop" + symbol
-            yield "insert " + stop_var + " isa stop has naptan-id \"" + naptan_id + "\" has name \"" + name + "\";\n"
-            stop_vars[naptan_id] = stop_var
+        for naptan_id, name in stops.items():
+            yield "insert $stop isa stop has naptan-id \"{}\" has name \"{}\";\n".format(naptan_id, name)
 
         # ===== MODES OF TRANSPORT =====
         modes_of_transport = set()
-        mode_of_transport_vars = dict()
         for route in routes_generator(routes):
             modes_of_transport.add(route["modeName"])
 
-        for mode_name, symbol in zip(modes_of_transport, symbol_generator()):
-            mode_of_transport_var = "$mode" + symbol
-            mode_of_transport_vars[mode_name] = mode_of_transport_var
-            yield "insert " + mode_of_transport_var + " isa mode-of-transport has name \"" + mode_name + "\";\n"
+        for mode_name in modes_of_transport:
+            yield "insert $mode isa mode-of-transport has name \"{}\";\n".format(mode_name)
 
-        for route, symbol in zip(routes_generator(routes), symbol_generator()):
+        # ===== ROUTES =====
+        for route in routes_generator(routes):
 
             # Relate the route to the mode of transport
-            s = ("match $mode isa mode-of-transport has name \"{}\";\n"
-                 "insert $route isa route has name \"{}\";\n"
-                 "(operated-by: $mode, operates: $route) isa operation;\n"
-                 ).format(route['modeName'], route['name'])
-            yield s
+            to_match = "match\n$mode isa mode-of-transport has name \"{}\";\n".format(route['modeName'])
+            to_insert = ("insert\n$route isa route has name \"{}\";\n"
+                         "(operated-by: $mode, operates: $route) isa operation;\n"
+                         ).format(route['name'])
+            to_relate = "(composes: $route"
 
-            for routeSection, symbol2 in zip(route["routeSections"], symbol_generator()):
+            # ===== ROUTE SECTIONS =====
+            for i, routeSection in enumerate(route["routeSections"]):
 
-                s = ("match $origin isa stop has naptan-id \"{}\"; $destination isa stop has naptan-id \"{}\";\n"
-                     "insert $route-section isa route-section "
-                     "has name \"{}\" "
-                     "has direction \"{}\" "
-                     "has service-type \"{}\" "
-                     "has valid-from {} "
-                     "has valid-to {};\n"
-                     "(origin: $origin, destination: $destination, has-route-section: $route-section) isa has-stops;\n"
-                     ).format(routeSection['originator'],
-                              routeSection['destination'],
-                              routeSection['name'],
-                              routeSection['direction'],
-                              routeSection['serviceType'],
-                              routeSection['validFrom'][:-1],
-                              routeSection['validTo'][:-1])
-                yield s
+                to_match += "$origin-{} isa stop has naptan-id \"{}\"; $destination-{} isa stop has naptan-id \"{}\";\n"\
+                    .format(i, routeSection['originator'], i, routeSection['destination'])
+
+                to_insert += (
+                       "$route-section-{} isa route-section "
+                       "has name \"{}\" "
+                       "has direction \"{}\" "
+                       "has service-type \"{}\" "
+                       "has valid-from {} "
+                       "has valid-to {};\n"
+                       "(origin: $origin-{}, destination: $destination-{}, has-route-section: $route-section-{}) isa "
+                       "has-stops;\n"
+                       ).format(i,
+                                routeSection['name'],
+                                routeSection['direction'],
+                                routeSection['serviceType'],
+                                routeSection['validFrom'][:-1],
+                                routeSection['validTo'][:-1],
+                                i,
+                                i,
+                                i)
+                to_relate += ", comprises: $route-section-{}".format(i)
+
+            to_relate += ") isa composition;\n"
+            yield to_match + to_insert + to_relate
 
 
 client = grakn.Client(uri='http://localhost:4567', keyspace='transportation_example')
