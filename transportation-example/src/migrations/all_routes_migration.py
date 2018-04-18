@@ -63,22 +63,30 @@ def import_query_generator():
         for route, symbol in zip(routes_generator(routes), symbol_generator()):
 
             # Relate the route to the mode of transport
-            yield "match $mode isa mode-of-transport has name \"" + route['modeName'] + "\";\n" + \
-                "insert $route isa route has name \"" + route['name'] + "\";\n" + \
-                "(operated-by: $mode, operates: $route) isa operation;\n"
+            s = ("match $mode isa mode-of-transport has name \"{}\";\n"
+                 "insert $route isa route has name \"{}\";\n"
+                 "(operated-by: $mode, operates: $route) isa operation;\n"
+                 ).format(route['modeName'], route['name'])
+            yield s
 
             for routeSection, symbol2 in zip(route["routeSections"], symbol_generator()):
 
-                # Add the relationship
-                yield "match $origin isa stop has naptan-id \"" + routeSection['originator'] + \
-                      "\"; $destination isa stop has naptan-id \"" + routeSection['destination'] + "\";" + \
-                    "insert $route-section isa route-section has name \"" + routeSection['name'] + \
-                      "\" has direction \"" + routeSection['direction'] + \
-                      "\" has service-type \"" + routeSection['serviceType'] + \
-                      "\" has valid-from " + routeSection['validFrom'][:-1] + \
-                      " has valid-to " + routeSection['validTo'][:-1] + ";\n" + \
-                      "\n(origin: $origin, destination: $destination, has-route-section: $route-section) " \
-                                    "isa has-stops;\n"
+                s = ("match $origin isa stop has naptan-id \"{}\"; $destination isa stop has naptan-id \"{}\";\n"
+                     "insert $route-section isa route-section "
+                     "has name \"{}\" "
+                     "has direction \"{}\" "
+                     "has service-type \"{}\" "
+                     "has valid-from {} "
+                     "has valid-to {};\n"
+                     "(origin: $origin, destination: $destination, has-route-section: $route-section) isa has-stops;\n"
+                     ).format(routeSection['originator'],
+                              routeSection['destination'],
+                              routeSection['name'],
+                              routeSection['direction'],
+                              routeSection['serviceType'],
+                              routeSection['validFrom'][:-1],
+                              routeSection['validTo'][:-1])
+                yield s
 
 
 client = grakn.Client(uri='http://localhost:4567', keyspace='transportation_example')
