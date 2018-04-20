@@ -22,12 +22,12 @@ has-stops sub relationship, # This naming is wrong
     relates origin,
     relates destination;
 
-route sub entity,
+route sub entity,  # This should be called service e.g. X1, Victoria, ScotRail (more like "operator" in the case of ScotRail)
     plays operates,
     plays composes,
     has name;
 
-route-section sub entity,
+route-section sub entity,  # This should be called route
     plays has-route-section,
     plays comprises,
     has direction,
@@ -36,7 +36,7 @@ route-section sub entity,
     has valid-from,
     has valid-to;
 
-composition sub relationship,
+composition sub relationship,  # If route becomes serice and sub-route becomes route, then this might become "runs" e.g. FGW runs route Bristol to London, Victoria runs blah
     relates comprises,
     relates composes;
 
@@ -53,18 +53,19 @@ operated-by sub role; operates sub role;
 connection sub relationship,
     relates connected-stop;
 
-direct-connection sub connection,
-    relates connected-stop;
+#direct-connection sub connection,
+#    relates connected-stop;
 
-indirect-connection sub connection,
-    relates connected-stop;
+#indirect-connection sub connection,
+#    relates connected-stop;
 
 directly-connected sub rule
     when {
         $origin-1 isa stop; $destination-1 isa stop; $route-section-1 isa route-section; 
         }
     then {
-        (connected-stop: $origin-1, connected-stop: $destination-1) isa direct-connection;
+#        (connected-stop: $origin-1, connected-stop: $destination-1) isa direct-connection;
+        (connected-stop: $origin-1, connected-stop: $destination-1) isa connection;
     };
 
 indirectly-connected sub rule
@@ -75,7 +76,8 @@ indirectly-connected sub rule
         (connected-stop: $change, connected-stop: $destination) isa connection;
     }
     then {
-        (connected-stop: $origin, connected-stop: $destination) isa indirect-connection;
+#        (connected-stop: $origin, connected-stop: $destination) isa indirect-connection;
+        (connected-stop: $origin, connected-stop: $destination) isa connection;
     };
 
 #tube_station sub stop;
