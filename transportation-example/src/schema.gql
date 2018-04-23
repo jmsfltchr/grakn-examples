@@ -43,7 +43,8 @@ composition sub relationship,  # If route becomes serice and sub-route becomes r
 stop sub entity,
     plays origin,
     plays destination,
-    plays connected-stop,
+    plays connected-from,
+    plays connected-to,
 	has naptan-id,  # make an Id later
     has name;
 
@@ -51,7 +52,8 @@ origin sub role; destination sub role; has-route-section sub role;
 operated-by sub role; operates sub role;
 
 connection sub relationship,
-    relates connected-stop;
+    relates connected-from,
+    relates connected-to;
 
 #direct-connection sub connection,
 #    relates connected-stop;
@@ -61,23 +63,22 @@ connection sub relationship,
 
 directly-connected sub rule
     when {
-        $origin-1 isa stop; $destination-1 isa stop; $route-section-1 isa route-section; 
+        $origin isa stop; $destination isa stop; $route-section isa route-section;
+        (origin: $origin, destination: $destination, has-route-section: $route-section) isa has-stops;
         }
     then {
-#        (connected-stop: $origin-1, connected-stop: $destination-1) isa direct-connection;
-        (connected-stop: $origin-1, connected-stop: $destination-1) isa connection;
+        (connected-from: $origin, connected-to: $destination) isa connection;
     };
 
 indirectly-connected sub rule
     when {
-        $origin isa stop; $change isa stop;
-        $change isa stop; $destination isa stop;
-        (connected-stop: $origin, connected-stop: $change) isa connection;
-        (connected-stop: $change, connected-stop: $destination) isa connection;
+        $origin isa stop; $change isa stop; $destination isa stop;
+        (connected-from: $origin, connected-to: $change) isa connection;
+        (connected-from: $change, connected-to: $destination) isa connection;
+        $origin != $destination;
     }
     then {
-#        (connected-stop: $origin, connected-stop: $destination) isa indirect-connection;
-        (connected-stop: $origin, connected-stop: $destination) isa connection;
+        (connected-from: $origin, connected-to: $destination) isa connection;
     };
 
 #tube_station sub stop;
