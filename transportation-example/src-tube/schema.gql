@@ -1,0 +1,49 @@
+define
+
+naptan-id sub attribute datatype string;
+name sub attribute datatype string;
+lat sub attribute datatype float;
+lon sub attribute datatype float;
+zone sub attribute datatype integer;
+direction sub attribute datatype string;
+identifier sub attribute datatype integer;
+duration sub attribute datatype integer;
+
+
+stop sub entity,
+    has naptan-id
+    has name,
+    has lat,
+    has lon,
+    has zone;
+
+line sub entity,
+    has name,
+    has identifier;
+
+route sub entity,
+    plays operates,
+    plays belongs-to,
+    plays operates,
+    has identifier;
+
+route-section sub relationship,
+    relates belongs-to,
+    relates from,
+    relates to,
+    has duration;
+
+service sub entity,
+    plays operated-by,
+    has name;
+
+operation sub relationship,
+    relates operated-by,
+    relates operates;
+
+operates sub role;
+operated-by sub role;
+
+belongs-to sub role;
+from sub role;
+to sub role;
