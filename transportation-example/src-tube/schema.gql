@@ -47,13 +47,3 @@ service sub entity,
 operation sub relationship,
     relates operated-by,
     relates operates;
-
-operates sub role;
-operated-by sub role;
-
-part-of sub role;
-goes-from sub role;
-goes-to sub role;
-
-within sub role;
-contains-stop sub role;
