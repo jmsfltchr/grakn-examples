@@ -2,6 +2,7 @@ import json
 import grakn
 import datetime as dt
 
+
 def import_query_generator():
     """
     Builds the Grakl statements required to import the transportation data contained in all_routes.json
@@ -19,8 +20,9 @@ def import_query_generator():
         #         print(line["name"])
         #     print("----")
 
-        yield ("insert $service isa service, has name \"{}\"").format(data['lineName'])
+        yield ("insert $service isa service, has name \"{}\";").format(data['lineName'])
 
+        zones = set()
         for stop in data["stops"]:
             try:
                 zone = stop["zone"]
@@ -28,13 +30,20 @@ def import_query_generator():
                 # In the case that there is no zone information
                 zone = -1
 
-            yield ("insert $s isa stop, has naptan-id \"{}\", has name \"{}\", "
-                   "has lat {}, has lon {}, has zone {};").format(
+            if zone not in zones:
+                zones.add(zone)
+                yield ("insert $zone isa zone, has name \"{}\";".format(zone))
+
+            yield ("match\n"
+                   "$zone isa zone, has name \"{}\";\n"
+                   "insert $stop isa stop, has naptan-id \"{}\", has name \"{}\", "
+                   "has lat {}, has lon {};\n"
+                   "(contains-stop: $stop, within: $zone) isa zoning;").format(
+                zone,
                 stop["id"],
                 stop["name"],
                 stop["lat"],
-                stop["lon"],
-                zone
+                stop["lon"]
             )
 
         # print("Departs at:")
@@ -60,10 +69,10 @@ def import_query_generator():
                 last_naptan_id = data['timetable']["departureStopId"]
                 last_time_to_arrival = 0
                 # print("----- id : {} -----".format(station_intervals["id"]))
-                yield ("match $service isa service, has name {};\n"
+                yield ("match $service isa service, has name \"{}\";\n"
                        "insert"
                        "$route isa route, has identifier {};\n"
-                       "(operated-by: $service, operates: $route)"
+                       "(operated-by: $service, operates: $route) isa operation;"
                        ).format(data['lineName'], station_intervals["id"])
 
                 for interval in station_intervals['intervals']:
@@ -73,7 +82,7 @@ def import_query_generator():
                         "$a isa stop, has naptan-id \"{}\";\n"
                         "$b isa stop, has naptan-id \"{}\";\n"
                         "$r isa route, has identifier \"{}\";\n"
-                        "insert (from: $a, to: $b, belongs-to: $r) isa route-section, has duration {};").format(
+                        "insert (goes-from: $a, goes-to: $b, part-of: $r) isa route-section, has duration {};").format(
                         last_naptan_id,
                         interval["stopId"],
                         station_intervals["id"],
