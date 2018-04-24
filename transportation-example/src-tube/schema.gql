@@ -67,7 +67,7 @@ find-origin sub rule,
     when {
         $s isa stop;
         $r isa route;
-        $rs(goes-from: $s, part-of: $r) isa route-section, has is-origin val true;
+        $rs(goes-from: $s, part-of: $r) isa route-section, has is-origin true;
     } then {
         (originates-at: $s, has-route: $r) isa origination;
     };
@@ -76,7 +76,7 @@ find-termination sub rule,
     when {
         $s isa stop;
         $r isa route;
-        $rs(goes-to: $s, part-of: $r) isa route-section, has is-termination val true;
+        $rs(goes-to: $s, part-of: $r) isa route-section, has is-termination true;
     } then {
         (terminates-at: $s, has-route: $r) isa termination;
     };
