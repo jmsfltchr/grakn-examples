@@ -2,20 +2,28 @@ define
 
 naptan-id sub attribute datatype string;
 name sub attribute datatype string;
-lat sub attribute datatype float;
-lon sub attribute datatype float;
-zone sub attribute datatype integer;
+lat sub attribute datatype double;
+lon sub attribute datatype double;
 direction sub attribute datatype string;
-identifier sub attribute datatype integer;
-duration sub attribute datatype integer;
+identifier sub attribute datatype long;
+duration sub attribute datatype long;
 
+zone sub entity,
+    plays within,
+    has name;
+
+zoning sub relationship,
+    relates within,
+    relates contains-stop;
 
 stop sub entity,
+    plays goes-from,
+    plays goes-to,
+    plays contains-stop,
     has naptan-id
     has name,
     has lat,
-    has lon,
-    has zone;
+    has lon;
 
 line sub entity,
     has name,
@@ -23,14 +31,13 @@ line sub entity,
 
 route sub entity,
     plays operates,
-    plays belongs-to,
-    plays operates,
+    plays part-of,
     has identifier;
 
 route-section sub relationship,
-    relates belongs-to,
-    relates from,
-    relates to,
+    relates part-of,
+    relates goes-from,
+    relates goes-to,
     has duration;
 
 service sub entity,
@@ -44,6 +51,9 @@ operation sub relationship,
 operates sub role;
 operated-by sub role;
 
-belongs-to sub role;
-from sub role;
-to sub role;
+part-of sub role;
+goes-from sub role;
+goes-to sub role;
+
+within sub role;
+contains-stop sub role;
