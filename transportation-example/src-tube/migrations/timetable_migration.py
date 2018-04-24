@@ -77,19 +77,24 @@ def import_query_generator():
                        "(operated-by: $service, operates: $route) isa operation;"
                        ).format(data['lineName'], station_intervals["id"])
 
-                for interval in station_intervals['intervals']:
-                    # print("Arrives at {} after {}".format(interval["stopId"], interval["timeToArrival"]))
+                for i, interval in enumerate(station_intervals['intervals']):
+                    origin_termination_flag = ""
+                    if i == 0:
+                        origin_termination_flag = ", has is-origin true"
+                    elif i == len(station_intervals['intervals']) - 1:
+                        origin_termination_flag = ", has is-termination true"
                     yield (
                         "match\n"
                         "$a isa stop, has naptan-id \"{}\";\n"
                         "$b isa stop, has naptan-id \"{}\";\n"
                         "$r isa route, has identifier \"{}\";\n"
                         "insert\n"
-                        "(goes-from: $a, goes-to: $b, part-of: $r) isa route-section, has duration {};").format(
+                        "$rs(goes-from: $a, goes-to: $b, part-of: $r) isa route-section, has duration {}{};").format(
                         last_naptan_id,
                         interval["stopId"],
                         station_intervals["id"],
-                        int(interval["timeToArrival"] - last_time_to_arrival)
+                        int(interval["timeToArrival"] - last_time_to_arrival),
+                        origin_termination_flag
                     )
 
                     last_time_to_arrival = interval["timeToArrival"]
