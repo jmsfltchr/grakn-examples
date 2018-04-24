@@ -36,7 +36,8 @@ def import_query_generator():
 
             yield ("match\n"
                    "$zone isa zone, has name \"{}\";\n"
-                   "insert $stop isa stop, has naptan-id \"{}\", has name \"{}\", "
+                   "insert\n"
+                   "$stop isa stop, has naptan-id \"{}\", has name \"{}\", "
                    "has lat {}, has lon {};\n"
                    "(contains-stop: $stop, within: $zone) isa zoning;").format(
                 zone,
@@ -69,8 +70,9 @@ def import_query_generator():
                 last_naptan_id = data['timetable']["departureStopId"]
                 last_time_to_arrival = 0
                 # print("----- id : {} -----".format(station_intervals["id"]))
-                yield ("match $service isa service, has name \"{}\";\n"
-                       "insert"
+                yield ("match\n"
+                       "$service isa service, has name \"{}\";\n"
+                       "insert\n"
                        "$route isa route, has identifier {};\n"
                        "(operated-by: $service, operates: $route) isa operation;"
                        ).format(data['lineName'], station_intervals["id"])
@@ -78,11 +80,12 @@ def import_query_generator():
                 for interval in station_intervals['intervals']:
                     # print("Arrives at {} after {}".format(interval["stopId"], interval["timeToArrival"]))
                     yield (
-                        "match "
+                        "match\n"
                         "$a isa stop, has naptan-id \"{}\";\n"
                         "$b isa stop, has naptan-id \"{}\";\n"
                         "$r isa route, has identifier \"{}\";\n"
-                        "insert (goes-from: $a, goes-to: $b, part-of: $r) isa route-section, has duration {};").format(
+                        "insert\n"
+                        "(goes-from: $a, goes-to: $b, part-of: $r) isa route-section, has duration {};").format(
                         last_naptan_id,
                         interval["stopId"],
                         station_intervals["id"],
