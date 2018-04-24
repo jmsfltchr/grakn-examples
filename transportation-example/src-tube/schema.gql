@@ -20,6 +20,8 @@ stop sub entity,
     plays goes-from,
     plays goes-to,
     plays contains-stop,
+    plays originates-at,
+    plays terminates-at,
     has naptan-id
     has name,
     has lat,
@@ -39,6 +41,16 @@ route-section sub relationship,
     relates goes-from,
     relates goes-to,
     has duration;
+
+origin-route-section sub route-section,
+    relates originates-at as goes-from,
+    relates part-of,
+    relates goes-to;
+
+termination-route-section sub route-section,
+    relates terminates-at,
+    relates part-of,
+    relates goes-from;
 
 service sub entity,
     plays operated-by,
