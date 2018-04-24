@@ -7,6 +7,8 @@ lon sub attribute datatype double;
 direction sub attribute datatype string;
 identifier sub attribute datatype long;
 duration sub attribute datatype long;
+is-origin sub attribute datatype boolean;
+is-termination sub attribute datatype boolean;
 
 zone sub entity,
     plays within,
@@ -19,6 +21,8 @@ zoning sub relationship,
 stop sub entity,
     plays goes-from,
     plays goes-to,
+    plays originates-at,
+    plays terminates-at,
     plays contains-stop,
     has naptan-id
     has name,
@@ -32,13 +36,16 @@ line sub entity,
 route sub entity,
     plays operates,
     plays part-of,
+    plays has-route,
     has identifier;
 
 route-section sub relationship,
     relates part-of,
     relates goes-from,
     relates goes-to,
-    has duration;
+    has duration,
+    has is-origin,
+    has is-termination;
 
 service sub entity,
     plays operated-by,
@@ -47,3 +54,29 @@ service sub entity,
 operation sub relationship,
     relates operated-by,
     relates operates;
+
+origination sub relationship,
+    relates originates-at,
+    relates has-route;
+
+termination sub relationship,
+    relates terminates-at,
+    relates has-route;
+
+find-origin sub rule,
+    when {
+        $s isa stop;
+        $r isa route;
+        $rs(goes-from: $s, part-of: $r) isa route-section, has is-origin val true;
+    } then {
+        (originates-at: $s, has-route: $r) isa origination;
+    };
+
+find-termination sub rule,
+    when {
+        $s isa stop;
+        $r isa route;
+        $rs(goes-to: $s, part-of: $r) isa route-section, has is-termination val true;
+    } then {
+        (terminates-at: $s, has-route: $r) isa termination;
+    };
