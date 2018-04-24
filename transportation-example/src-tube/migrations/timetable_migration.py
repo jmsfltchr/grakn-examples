@@ -95,5 +95,31 @@ def import_query_generator():
         # print("End of route")
 
 
-for query in import_query_generator():
-    print(query)
+def make_queries(query_generator, keyspace, uri='http://localhost:4567', log_file="logs/graql_output_{}.txt".format(dt.datetime.now())):
+    client = grakn.Client(uri=uri, keyspace=keyspace)
+
+    start_time = dt.datetime.now()
+    # log_file = "logs/graql_output_{}.txt".format(dt.datetime.now())
+    with open(log_file, "w") as graql_output:
+        for query in query_generator():
+            print(query)
+            print("---")
+            graql_output.write(query)
+            # graql_output.write("---")
+            # Feed the queries one at a time
+            response = client.execute(query)
+            graql_output.write(str(response))
+            graql_output.write("\n{} insertions made \n ----- \n".format(len(response)))
+            if len(response) == 0:
+                raise RuntimeError("Tried to make an insertion, but no concepts could be inserted. Check entities in \""
+                                   "match\" clause")
+
+            # TODO how to do complex matches to get the variables of 2 different things without inefficiency
+            # TODO Northern Rail takes some time to complete
+
+    end_time = dt.datetime.now()
+    time_taken = end_time - start_time
+    print("Time taken: {}".format(time_taken))
+
+
+make_queries(import_query_generator, "tube_example")
