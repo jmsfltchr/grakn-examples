@@ -4,6 +4,13 @@ import datetime as dt
 import os
 
 
+def id_generator():
+    i = 0
+    while 1:
+        yield i
+        i += 1
+
+
 def import_query_generator(timetables_dir_path):
     """
     Builds the Grakl statements required to import the transportation data contained in all_routes.json
@@ -14,6 +21,8 @@ def import_query_generator(timetables_dir_path):
     zone_names = set()
     stop_ids = set()
     line_names = set()
+    route_id_gen = id_generator()
+
     for timetable_path in timetable_paths:
         with open(timetables_dir_path + "/" + timetable_path, 'r') as f:
             data = json.load(f)
@@ -58,13 +67,13 @@ def import_query_generator(timetables_dir_path):
                 for station_intervals in routes["stationIntervals"]:
                     last_naptan_id = data['timetable']["departureStopId"]
                     last_time_to_arrival = 0
-                    # print("----- id : {} -----".format(station_intervals["id"]))
+                    route_id = next(route_id_gen)
                     yield ("match\n"
                            "$line isa line, has name \"{}\";\n"
                            "insert\n"
                            "$route isa route, has identifier {};\n"
                            "(operated-by: $line, operates: $route) isa operation;"
-                           ).format(data['lineName'], station_intervals["id"])
+                           ).format(data['lineName'], route_id)
 
                     for i, interval in enumerate(station_intervals['intervals']):
                         origin_termination_flag = ""
@@ -76,12 +85,12 @@ def import_query_generator(timetables_dir_path):
                             "match\n"
                             "$a isa stop, has naptan-id \"{}\";\n"
                             "$b isa stop, has naptan-id \"{}\";\n"
-                            "$r isa route, has identifier \"{}\";\n"
+                            "$r isa route, has identifier {};\n"
                             "insert\n"
                             "$rs(goes-from: $a, goes-to: $b, part-of: $r) isa route-section, has duration {}{};").format(
                             last_naptan_id,
                             interval["stopId"],
-                            station_intervals["id"],
+                            route_id,
                             int(interval["timeToArrival"] - last_time_to_arrival),
                             origin_termination_flag
                         )
@@ -102,7 +111,7 @@ def make_queries(query_generator, timetables_dir_path, keyspace, uri='http://loc
             graql_output.write(query)
             # Feed the queries one at a time
             response = client.execute(query)
-            graql_output.write(str(response))
+            graql_output.write("\n--response:\n" + str(response))
             graql_output.write("\n{} insertions made \n ----- \n".format(len(response)))
             if len(response) == 0:
                 raise RuntimeError("Tried to make an insertion, but no concepts could be inserted. Check entities in \""
@@ -127,7 +136,7 @@ if __name__ == "__main__":
 
     if go:
 
-        make_queries(import_query_generator, timetables_dir_path, "tube_example_5")
+        make_queries(import_query_generator, timetables_dir_path, "tube_example_6")
     else:
         for query in import_query_generator(timetables_dir_path):
             print(query)
