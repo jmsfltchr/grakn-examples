@@ -29,10 +29,6 @@ stop sub entity,
     has lat,
     has lon;
 
-line sub entity,
-    has name,
-    has identifier;
-
 route sub entity,
     plays operates,
     plays part-of,
@@ -47,7 +43,7 @@ route-section sub relationship,
     has is-origin,
     has is-termination;
 
-service sub entity,
+line sub entity,
     plays operated-by,
     has name;
 
