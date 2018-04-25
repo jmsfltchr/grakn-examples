@@ -84,16 +84,16 @@ def get_route_info(lines, load_path):
 if __name__ == "__main__":
 
     lines = ["bakerloo",
-         "central",
-         "circle",
-         "district",
-         "hammersmith-city",
-         "jubilee",
-         "metropolitan",
-         "northern",
-         "piccadilly",
-         "victoria",
-         "waterloo-city"]
+             "central",
+             "circle",
+             "district",
+             "hammersmith-city",
+             "jubilee",
+             "metropolitan",
+             "northern",
+             "piccadilly",
+             "victoria",
+             "waterloo-city"]
 
     download_dir_name = "data-downloads"
     routes_path = "{}/{}/routes/".format(download_dir_name, os.path.dirname(__file__))
