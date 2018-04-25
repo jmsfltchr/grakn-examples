@@ -13,13 +13,6 @@ def import_query_generator():
 
     with open(s, 'r') as f:
         data = json.load(f)
-        # for station in data["stations"]:
-        #     print(station["name"])
-        #     print("-")
-        #     for line in station["lines"]:
-        #         print(line["name"])
-        #     print("----")
-
         yield ("insert $service isa service, has name \"{}\";").format(data['lineName'])
 
         zones = set()
@@ -47,23 +40,9 @@ def import_query_generator():
                 stop["lon"]
             )
 
-        # print("Departs at:")
-        # for routes in data["timetable"]["routes"]:
-        #     # for route in timetable["routes"]:
-        #     for schedule in routes["schedules"]:
-        #         for known_journey in schedule["knownJourneys"]:
-        #             print("{}:{}".format(known_journey["hour"], known_journey["minute"]))
-        #             print("intervalId: {}".format(known_journey["intervalId"]))
-        #             print("-")
-        #         print("End of journey")
-        #     print("End of route")
-
-
         """
         Get the time between stops
         """
-        # print("Departs at:")
-        # for timetable in data["timetable"]:
         for routes in data['timetable']["routes"]:
 
             for station_intervals in routes["stationIntervals"]:
@@ -100,8 +79,6 @@ def import_query_generator():
                     last_time_to_arrival = interval["timeToArrival"]
                     last_naptan_id = interval["stopId"]
 
-        # print("End of route")
-
 
 def make_queries(query_generator, keyspace, uri='http://localhost:4567', log_file="logs/graql_output_{}.txt".format(dt.datetime.now())):
     client = grakn.Client(uri=uri, keyspace=keyspace)
@@ -113,7 +90,6 @@ def make_queries(query_generator, keyspace, uri='http://localhost:4567', log_fil
             print(query)
             print("---")
             graql_output.write(query)
-            # graql_output.write("---")
             # Feed the queries one at a time
             response = client.execute(query)
             graql_output.write(str(response))
