@@ -96,8 +96,8 @@ if __name__ == "__main__":
              "waterloo-city"]
 
     download_dir_name = "data-downloads"
-    routes_path = "{}/{}/routes/".format(download_dir_name, os.path.dirname(__file__))
-    timetables_path = "{}/{}/timetables/".format(download_dir_name, os.path.dirname(__file__))
+    routes_path = "{}/{}/routes/".format(os.path.dirname(__file__), download_dir_name)
+    timetables_path = "{}/{}/timetables/".format(os.path.dirname(__file__), download_dir_name)
 
     for line in lines:
         dl_route_from_api(line, routes_path)
