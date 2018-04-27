@@ -3,6 +3,8 @@ import grakn
 import datetime as dt
 import os
 
+from src_tube.utils.assertions import check_insert_response
+
 
 def id_generator():
     i = 0
@@ -113,9 +115,7 @@ def make_queries(query_generator, timetables_dir_path, keyspace, uri='http://loc
             response = client.execute(query)
             graql_output.write("\n--response:\n" + str(response))
             graql_output.write("\n{} insertions made \n ----- \n".format(len(response)))
-            if len(response) == 0:
-                raise RuntimeError("Tried to make an insertion, but no concepts could be inserted. Check entities in \""
-                                   "match\" clause")
+            check_insert_response(response)
 
             # TODO how to do complex matches to get the variables of 2 different things without inefficiency
             # TODO Northern Rail takes some time to complete
@@ -136,7 +136,7 @@ if __name__ == "__main__":
 
     if go:
 
-        make_queries(import_query_generator, timetables_dir_path, "tube_example_6")
+        make_queries(import_query_generator, timetables_dir_path, "tube_example_9")
     else:
         for query in import_query_generator(timetables_dir_path):
             print(query)
