@@ -9,6 +9,7 @@ identifier sub attribute datatype long;
 duration sub attribute datatype long;
 is-origin sub attribute datatype boolean;
 is-termination sub attribute datatype boolean;
+distance sub attribute datatype double;
 
 zone sub entity,
     plays within,
@@ -24,6 +25,8 @@ stop sub entity,
     plays originates-at,
     plays terminates-at,
     plays contains-stop,
+    plays connected-stop,
+    plays is-adjacent,
     has naptan-id
     has name,
     has lat,
@@ -45,6 +48,7 @@ route-section sub relationship,
 
 line sub entity,
     plays operated-by,
+    plays via-line,
     has name;
 
 operation sub relationship,
@@ -76,3 +80,32 @@ find-termination sub rule,
     } then {
         (terminates-at: $s, has-route: $r) isa termination;
     };
+
+connection sub relationship,
+    relates connected-stop,
+    relates via-line;
+
+connectedness sub rule,
+    when {
+        $s1 isa stop;
+        $s2 isa stop;
+        $r isa route;
+        $rs($s1, $s2, $r) isa route-section;
+        $l isa line;
+        $o($l, $r) isa operation;
+    } then {
+        $c(connected-stop: $s1, connected-stop: $s2, via-line: $l) isa connection;
+    }
+
+adjacent sub relationship, # Change to neighbouring and neighbour
+    relates is-adjacent,
+    has distance;
+
+adjacency sub rule,
+    when {
+        $s1 isa stop;
+        $s2 isa stop;
+        ($s1, $s2) isa route-section;
+    } then {
+        ($s1, $s2) isa adjacent;
+    }
