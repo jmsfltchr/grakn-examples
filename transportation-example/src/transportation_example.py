@@ -38,6 +38,20 @@ if q == 3:
     query = ("match\n"
              "${} isa stop, has name \"Ealing Broadway Underground Station\"; get;".format(var_to_find))
 
+
+if q == 4:
+    query = ("match" 
+             "$x isa stop, has name \"Woolwich Ferry South Pier\";"
+             "$y isa stop;"
+             "$c ($x, $y) isa connection;"
+             "get;")
+
+    "match $x isa stop, has name "Ealing Broadway Underground Station";
+$x isa stop;
+(connected-from: $x, connected-to: $y) isa connection; get;"
+
+
+
 print(query)
 client = grakn.Client(uri='http://localhost:4567', keyspace='transportation_example')
 result = client.execute(query)
