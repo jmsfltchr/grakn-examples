@@ -1,4 +1,5 @@
-from .settings
+from tube_network_example.settings
+
 """
 Get the routes and their origination and termination stations
 """

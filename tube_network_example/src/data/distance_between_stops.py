@@ -12,7 +12,8 @@ https://www.movable-type.co.uk/scripts/latlong.html
 
 from math import cos, asin, sqrt
 import grakn
-import src_tube.settings as settings
+import tube_network_example.settings as settings
+from utils.assertions import check_response_length
 
 
 def distance_from_coords(lat1: float, lon1: float, lat2: float, lon2: float) -> float:
@@ -52,5 +53,5 @@ if __name__ == "__main__":
                  # "insert $r(is-adjacent: $s1, is-adjacent: $s2) isa adjacent, has distance {};").format(
                  "insert $r has distance {};").format(
             s['s1']['id'], s['s2']['id'], dist_km)
-        # response = client.execute(query)
-        # check_insert_response(response)
+        response = client.execute(query)
+        check_response_length(response)
