@@ -1,0 +1,20 @@
+define
+directly-connected sub rule
+    when {
+        $origin isa stop; $destination isa stop; $route-section isa route-section;
+        (origin: $origin, destination: $destination, has-route-section: $route-section) isa has-stops;
+        }
+    then {
+        (connected-from: $origin, connected-to: $destination) isa connection;
+    };
+
+indirectly-connected sub rule
+    when {
+        $origin isa stop; $change isa stop; $destination isa stop;
+        (connected-from: $origin, connected-to: $change) isa connection;
+        (connected-from: $change, connected-to: $destination) isa connection;
+        $origin != $destination;
+    }
+    then {
+        (connected-from: $origin, connected-to: $destination) isa connection;
+    };
