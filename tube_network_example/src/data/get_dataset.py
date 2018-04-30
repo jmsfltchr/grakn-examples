@@ -2,7 +2,7 @@ from collections import namedtuple
 from urllib.request import urlopen
 import ssl as ssl
 import json
-import os
+import tube_network_example.settings as settings
 
 
 def url_data_to_file(url, write_filename):
@@ -95,16 +95,12 @@ if __name__ == "__main__":
              "victoria",
              "waterloo-city"]
 
-    download_dir_name = "data-downloads"
-    routes_path = "{}/{}/routes/".format(os.path.dirname(__file__), download_dir_name)
-    timetables_path = "{}/{}/timetables/".format(os.path.dirname(__file__), download_dir_name)
-
     for line in lines:
-        dl_route_from_api(line, routes_path)
+        dl_route_from_api(line, settings.routes_path)
 
-    all_route_info = get_route_info(lines, routes_path)
+    all_route_info = get_route_info(lines, settings.routes_path)
     for ri in all_route_info:
-        dl_timetable_from_api(ri.line, ri.origin, ri.direction, timetables_path)
+        dl_timetable_from_api(ri.line, ri.origin, ri.direction, settings.timetables_path)
 
 
 

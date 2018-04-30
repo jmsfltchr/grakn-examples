@@ -94,8 +94,8 @@ connectedness sub rule,
         $l isa line;
         $o($l, $r) isa operation;
     } then {
-        $c(connected-stop: $s1, connected-stop: $s2, via-line: $l) isa connection;
-    }
+        (connected-stop: $s1, connected-stop: $s2, via-line: $l) isa connection;
+    };
 
 adjacent sub relationship, # Change to neighbouring and neighbour
     relates is-adjacent,
@@ -108,4 +108,4 @@ adjacency sub rule,
         ($s1, $s2) isa route-section;
     } then {
         ($s1, $s2) isa adjacent;
-    }
+    };

@@ -3,7 +3,8 @@ import grakn
 import datetime as dt
 import os
 
-from src_tube.utils.assertions import check_insert_response
+import tube_network_example.settings as settings
+from utils.assertions import check_response_length
 
 
 def id_generator():
@@ -101,7 +102,7 @@ def import_query_generator(timetables_dir_path):
                         last_naptan_id = interval["stopId"]
 
 
-def make_queries(query_generator, timetables_dir_path, keyspace, uri='http://localhost:4567', log_file="logs/graql_output_{}.txt".format(dt.datetime.now())):
+def make_queries(query_generator, timetables_dir_path, keyspace, uri=settings.uri, log_file="logs/graql_output_{}.txt".format(dt.datetime.now())):
     client = grakn.Client(uri=uri, keyspace=keyspace)
 
     start_time = dt.datetime.now()
@@ -115,7 +116,7 @@ def make_queries(query_generator, timetables_dir_path, keyspace, uri='http://loc
             response = client.execute(query)
             graql_output.write("\n--response:\n" + str(response))
             graql_output.write("\n{} insertions made \n ----- \n".format(len(response)))
-            check_insert_response(response)
+            check_response_length(response, min_length=1, max_length=None)
 
             # TODO how to do complex matches to get the variables of 2 different things without inefficiency
             # TODO Northern Rail takes some time to complete
@@ -127,16 +128,11 @@ def make_queries(query_generator, timetables_dir_path, keyspace, uri='http://loc
 
 if __name__ == "__main__":
 
-    download_dir_name = "data/data-downloads"
-
-    routes_path = "{}/{}/routes/".format(os.path.dirname(__file__), download_dir_name)
-    timetables_dir_path = "{}/../{}/timetables/".format(os.path.dirname(__file__), download_dir_name)
-
     go = True
 
     if go:
 
-        make_queries(import_query_generator, timetables_dir_path, "tube_example_9")
+        make_queries(import_query_generator, settings.timetables_path, settings.keyspace)
     else:
-        for query in import_query_generator(timetables_dir_path):
+        for query in import_query_generator(settings.timetables_path):
             print(query)

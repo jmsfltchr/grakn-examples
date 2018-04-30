@@ -1,8 +1,8 @@
 
 import os
 download_dir_name = "data-downloads"
-routes_path = "{}/{}/routes/".format(download_dir_name, os.path.dirname(__file__))
-timetables_path = "{}/{}/timetables/".format(download_dir_name, os.path.dirname(__file__))
+routes_path = "{}/{}/routes/".format(os.path.dirname(__file__), download_dir_name)
+timetables_path = "{}/{}/timetables/".format(os.path.dirname(__file__), download_dir_name)
 
 lines = ["bakerloo",
          "central",
@@ -17,4 +17,4 @@ lines = ["bakerloo",
          "waterloo-city"]
 
 uri = 'http://localhost:4567'
-keyspace = "tube_example_9"
+keyspace = "tube_example"
