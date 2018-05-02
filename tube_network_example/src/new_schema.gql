@@ -1,0 +1,77 @@
+
+# a <relationship> has a <role> in the form of a <subject> (<subject> is a concept, which could be an entity, relationship, or attribute)
+
+define
+
+naptan-id sub attribute datatype string;
+name sub attribute datatype string;
+lat sub attribute datatype double;
+lon sub attribute datatype double;
+duration sub attribute datatype long;
+distance sub attribute datatype double;
+
+
+station sub entity,
+	plays stop,
+	plays start,
+	plays end,
+	plays connection,
+	plays contained-station,
+	has naptan-id,
+    has name,
+    has lat,
+    has lon;
+
+
+route sub relationship,
+	# a <route> has a <section> in the form of a <route-section>
+	relates section, # is <section> too vague?
+	# a <route> has a <stop> in the form of a <station>	
+	relates stop,
+
+	# a <route> has a <origin> as a <stop> in the form of a <station>
+	relates origin as stop,
+
+	# a <route> has a <destination> as a <stop> in the form of a <station>
+	relates destination as stop,
+
+	# a <route> has a <service/operator/agent/handler/service-provider/provider/facilitator/enabler/route-line> in the form of a <line>
+	# why route-line or route-operator and not something else? Because the other terms are vague, and could describe a 
+	# lot of other roles, whereas route-line substitutes for where we cannot find a name, but can generate something specific
+	
+	# a West Ruislip to Epping route has a <route-line/route-operator> in the form of the Central Line
+	relates route-operator;
+
+route-section sub relationship,
+	# a <route-section> has a <start> in the form of a <station>
+	relates start,
+
+	# a <route-section> has a <end> in the form of a <station>
+	relates end,
+
+	# a <route-section> plays the role of <section> in a <route>
+	# a <route-section> relates to a <route> as a <section>
+	plays section,
+	plays linking-section,
+	has duration;
+
+
+link sub relationship,
+	# a <link> has a <linking-section> in the form of a <route-section>
+	relates linking-section,
+
+	# a <link> has a <connection> in the form of a <station>
+	relates connection,
+	has distance;
+
+
+line sub entity,
+	plays route-operator,
+	has name;
+
+
+zone sub relationship,
+	# a <zone> has a <contained-station> in the form of a <station>
+	relates contained-station,
+	# usage: $z(contained-station: $station1, contained-station: $station2)
+	has name;

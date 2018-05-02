@@ -1,0 +1,56 @@
+
+a route-section start(s) at a station
+a route-section end(s) at a station
+
+a routes stop(s) at a station
+a route has a stop in the form of a station
+
+
+a link connect(s) at a station
+a link has a connection in the form of a station # changes from connect to connection
+
+
+a route-section has a link in the form of a ______
+a route-section has a link in the form of a realisation/connection-made # I don't think this really makes sense
+a link has a route-section in the form of a method/way-to-link/way-to-travel/transport-link/connecting-section/link-traversal/linking-section
+#a link require(s) at a route-section
+#a route-section run(s) at a link
+a route-section ______(s) at a link
+
+a route-section has a section in the form of a route-section
+
+
+match
+$l isa link;
+$rs isa route-section;
+(connecting-section: $rs)
+
+# To get a route section:
+$rs(start: $s1, end: $s2, parent-route: $route) isa route-section;
+
+
+
+$s1 isa station;
+$s2 isa station;
+$r isa route;
+$link(connect: $s1, connect: $s2, link-traversal: $rs) isa link;
+$rs(start: $s1, end: $s2, parent-route: $r) isa route-section;
+
+
+
+
+# After performing a compute query for the shortest number of stops, we have a list of stops and links:
+$s1, $l1, $s2, $l2, $s3, $l3, $s4
+# Now we want to find the shortest number of routes that need to be taken in order to traverse these links
+
+
+
+fulfills-link
+	when {
+		$l1($s1, $s2) isa link;
+		$rs(start: $s1, end: $s2, parent-route: $r) isa route-section;
+
+		$l2($s2, $s3) isa link;
+	} then {
+
+	}

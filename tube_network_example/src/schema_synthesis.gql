@@ -1,0 +1,77 @@
+
+# Phrasing 1
+a station plays the role of stop in a route
+
+so, origin and destination sub stop
+a station plays the role of origin in a route
+a station plays the role of destination in a route
+
+a route-section plays the role of connection in a stop-connection
+a route-section plays the role of section in a route
+
+a station plays the role of comes-from in a route-section
+a station plays the role of goes-to in a route-section
+
+a station plays the role of connected in a stop-connection
+
+# Phrasing 2
+
+a route relates to a station as a stop
+a route relates to a stop, which is the context of a station
+a route relates to a station as a start
+a route relates to a station as a destination
+
+# Phrasing 3
+a station is a origin of a route
+a station is a destination of a route
+a station is a stop of a route
+
+a routes stop(s) at a station
+
+a station is a comes-from of a route-section
+
+a route-section origin(ates) at a station
+a route-section start(s) at a station
+a route-section end(s) at a station
+
+
+
+# All combinations for route-section, start, station:
+# route-section, start, station
+a route-section start(s) at a station
+a route-section has a start at a station
+# route-section, station, start
+a route-section has a station that plays the role of start
+a route-section relates a station via the role start
+# station, start, route-section
+a station plays the role of start in a route-section
+# start, station, route-section
+start is the role played by station in a route-section
+# station, route-section, start
+a station relates to a route-section as a start
+a station belongs to a route-section as a start
+# start, route-section, station
+a start is the role that relates a route-section to a station
+
+
+# Top 3:
+# route-section, start, station
+a route-section start(s) at a station
+a route-section has a start in the form of a station
+# station, route-section, start
+station relates to a route-section as a start
+# station, start, route-section
+a station plays the role of start in a route-section
+
+# Again for route-section, route, section:
+
+# All combinations for route-section, start, station:
+# route, section, route-section
+a route section(s) at a route-section
+a route has a section in the form of a route-section
+a <relationship> has a <role> in the form of a <subject> (<subject> is a concept, which could be an entity, relationship, or attribute)
+# notice when doing this that all 3 are nouns
+
+
+
+# Looking for the most expressive model, that can be queried easily and naturally
