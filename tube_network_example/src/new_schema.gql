@@ -15,8 +15,8 @@ station sub entity,
 	plays stop,
 	plays start,
 	plays end,
-	plays connection,
 	plays contained-station,
+	plays neighbour,
 	has naptan-id,
     has name,
     has lat,
@@ -42,30 +42,33 @@ route sub relationship,
 	# a West Ruislip to Epping route has a <route-line/route-operator> in the form of the Central Line
 	relates route-operator;
 
-route-section sub relationship,
-	# a <route-section> has a <start> in the form of a <station>
-	relates start,
 
-	# a <route-section> has a <end> in the form of a <station>
-	relates end,
+route-section sub entity,
 
 	# a <route-section> plays the role of <section> in a <route>
 	# a <route-section> relates to a <route> as a <section>
+	# You could replace this entity with the timetabled duration, but that wouldn't be open to extensibility if we later wanted to add more information about that route section
 	plays section,
-	plays linking-section,
+	plays service,
 	has duration;
 
 
-link sub relationship,
-	# a <link> has a <linking-section> in the form of a <route-section>
-	relates linking-section,
+tunnel sub relationship, # could be called a link, transport-link, track-section or tunnel
+	# a <tunnel> has a <start> in the form of a <station>
+	relates start,
 
-	# a <link> has a <connection> in the form of a <station>
-	relates connection,
-	has distance;
+	# a <tunnel> has a <end> in the form of a <station>
+	relates end,
+
+	# a <tunnel> has a <linking-section> in the form of a <route-section>
+	# a <tunnel> has a <fulfillment/actuation/tube-link/link/connection/service> in the form of a <route-section>
+	# a <tunnel> has a <service> in the form of a <route-section>
+	relates service;
+
+	#has distance;  # If link is directional than this would exist twice if included here. Would be better as a seperate <neighbourship> relationship
 
 
-line sub entity,
+tube-line sub entity,
 	plays route-operator,
 	has name;
 
@@ -73,5 +76,11 @@ line sub entity,
 zone sub relationship,
 	# a <zone> has a <contained-station> in the form of a <station>
 	relates contained-station,
-	# usage: $z(contained-station: $station1, contained-station: $station2)
+	# usage: $z(contained-station: $station1, contained-station: $station2) isa zone;
 	has name;
+
+
+neighbourship sub relationship,
+	# a <neighbourship> has a <neighbour> in the form of a <station>
+	relates neighbour,
+	has distance;
