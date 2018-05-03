@@ -38,7 +38,7 @@ if __name__ == "__main__":
              "$s2 isa stop, has lon $lon2, has lat $lat2;\n"
              "($s1, $s2) isa adjacent;\n"
              "get $s1, $s2, $lon1, $lat1, $lon2, $lat2;")
-
+    print(query + "\n---\n")
     set_of_matches = client.execute(query)
 
     for s in set_of_matches:
@@ -53,5 +53,6 @@ if __name__ == "__main__":
                  # "insert $r(is-adjacent: $s1, is-adjacent: $s2) isa adjacent, has distance {};").format(
                  "insert $r has distance {};").format(
             s['s1']['id'], s['s2']['id'], dist_km)
+        print(query + "\n---\n")
         response = client.execute(query)
-        check_response_length(response)
+        check_response_length(response, min_length=1)
