@@ -1,111 +1,86 @@
+
+# a <relationship> has a <role> in the form of a <subject> (<subject> is a concept, which could be an entity, relationship, or attribute)
+
 define
 
 naptan-id sub attribute datatype string;
 name sub attribute datatype string;
 lat sub attribute datatype double;
 lon sub attribute datatype double;
-direction sub attribute datatype string;
-identifier sub attribute datatype long;
 duration sub attribute datatype long;
-is-origin sub attribute datatype boolean;
-is-termination sub attribute datatype boolean;
 distance sub attribute datatype double;
 
-zone sub entity,
-    plays within,
-    has name;
 
-zoning sub relationship,
-    relates within,
-    relates contains-stop;
-
-stop sub entity,
-    plays goes-from,
-    plays goes-to,
-    plays originates-at,
-    plays terminates-at,
-    plays contains-stop,
-    plays connected-stop,
-    plays is-adjacent,
-    has naptan-id
+station sub entity,
+	plays stop,
+	plays start,
+	plays end,
+	plays contained-station,
+	plays neighbour,
+	has naptan-id,
     has name,
     has lat,
     has lon;
 
-route sub entity,
-    plays operates,
-    plays part-of,
-    plays has-route,
-    has identifier;
 
-route-section sub relationship,
-    relates part-of,
-    relates goes-from,
-    relates goes-to,
-    has duration,
-    has is-origin,
-    has is-termination;
+route sub relationship,
+	# a <route> has a <section> in the form of a <route-section>
+	relates section, # is <section> too vague?
+	# a <route> has a <stop> in the form of a <station>	
+	relates stop,
 
-line sub entity,
-    plays operated-by,
-    plays via-line,
-    has name;
+	# a <route> has a <origin> as a <stop> in the form of a <station>
+	relates origin as stop,
 
-operation sub relationship,
-    relates operated-by,
-    relates operates;
+	# a <route> has a <destination> as a <stop> in the form of a <station>
+	relates destination as stop,
 
-origination sub relationship,
-    relates originates-at,
-    relates has-route;
+	# a <route> has a <service/operator/agent/handler/service-provider/provider/facilitator/enabler/route-line> in the form of a <line>
+	# why route-line or route-operator and not something else? Because the other terms are vague, and could describe a 
+	# lot of other roles, whereas route-line substitutes for where we cannot find a name, but can generate something specific
+	
+	# a West Ruislip to Epping route has a <route-line/route-operator> in the form of the Central Line
+	relates route-operator;
 
-termination sub relationship,
-    relates terminates-at,
-    relates has-route;
 
-find-origin sub rule,
-    when {
-        $s isa stop;
-        $r isa route;
-        $rs(goes-from: $s, part-of: $r) isa route-section, has is-origin true;
-    } then {
-        (originates-at: $s, has-route: $r) isa origination;
-    };
+route-section sub entity,
 
-find-termination sub rule,
-    when {
-        $s isa stop;
-        $r isa route;
-        $rs(goes-to: $s, part-of: $r) isa route-section, has is-termination true;
-    } then {
-        (terminates-at: $s, has-route: $r) isa termination;
-    };
+	# a <route-section> plays the role of <section> in a <route>
+	# a <route-section> relates to a <route> as a <section>
+	# You could replace this entity with the timetabled duration, but that wouldn't be open to extensibility if we later wanted to add more information about that route section
+	plays section,
+	plays service,
+	has duration;
 
-connection sub relationship,
-    relates connected-stop,
-    relates via-line;
 
-connectedness sub rule,
-    when {
-        $s1 isa stop;
-        $s2 isa stop;
-        $r isa route;
-        $rs($s1, $s2, $r) isa route-section;
-        $l isa line;
-        $o($l, $r) isa operation;
-    } then {
-        (connected-stop: $s1, connected-stop: $s2, via-line: $l) isa connection;
-    };
+tunnel sub relationship, # could be called a link, transport-link, track-section or tunnel
+	# a <tunnel> has a <start> in the form of a <station>
+	relates start,
 
-adjacent sub relationship, # Change to neighbouring and neighbour
-    relates is-adjacent,
-    has distance;
+	# a <tunnel> has a <end> in the form of a <station>
+	relates end,
 
-adjacency sub rule,
-    when {
-        $s1 isa stop;
-        $s2 isa stop;
-        ($s1, $s2) isa route-section;
-    } then {
-        ($s1, $s2) isa adjacent;
-    };
+	# a <tunnel> has a <linking-section> in the form of a <route-section>
+	# a <tunnel> has a <fulfillment/actuation/tube-link/link/connection/service> in the form of a <route-section>
+	# a <tunnel> has a <service> in the form of a <route-section>
+	relates service;
+
+	#has distance;  # If link is directional than this would exist twice if included here. Would be better as a seperate <neighbourship> relationship
+
+
+tube-line sub entity,
+	plays route-operator,
+	has name;
+
+
+zone sub relationship,
+	# a <zone> has a <contained-station> in the form of a <station>
+	relates contained-station,
+	# usage: $z(contained-station: $station1, contained-station: $station2) isa zone;
+	has name;
+
+
+neighbourship sub relationship,
+	# a <neighbourship> has a <neighbour> in the form of a <station>
+	relates neighbour,
+	has distance;
