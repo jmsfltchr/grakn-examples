@@ -3,30 +3,7 @@ import grakn
 import datetime as dt
 import os
 import tube_network_example.settings as settings
-from utils.assertions import check_response_length
-
-
-def _match(graql_body):
-    prefix = "match "
-    return prefix + graql_body
-
-
-def match_get(graql_body):
-    suffix = " get;"
-    return _match(graql_body) + suffix
-
-
-def insert(graql_body):
-    prefix = "insert "
-    return prefix + graql_body
-
-
-def match_insert(match_graql_body, insert_graql_body):
-    return _match(match_graql_body) + "\n" + insert(insert_graql_body)
-
-
-def get_match_id(match_get_response, var_name):
-    return match_get_response[0][var_name]['id']
+from utils.utils import check_response_length, match_get, insert, match_insert, get_match_id
 
 
 def import_query_generator(perform_query, timetables_dir_path):
@@ -147,9 +124,6 @@ def import_query_generator(perform_query, timetables_dir_path):
                         # === Connect Stations to Routes ===
                         if i == len(station_intervals['intervals']) - 1:
                             # In this case we're at the last route-section of the route, ending at the last station
-                            # TODO This doesn't work as it doesn't get the last stop, it gets the one before last
-                            # TODO instead this needs to happen as an EXTRA step on the last iteration. In that iteration there are 2 stops to add.
-                            # TODO Or this can be changed around to add 2 the first iteration (1 before the loop)
                             role_played = "destination"
                         else:
                             role_played = "stop"

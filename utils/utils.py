@@ -25,3 +25,26 @@ def check_response_length(response, min_length=None, max_length=None):
 
     elif min_length > max_length:
         raise ValueError("Specified minimum length is greater than maximum length, which cannot be satisfied")
+
+
+def _match(graql_body):
+    prefix = "match "
+    return prefix + graql_body
+
+
+def match_get(graql_body):
+    suffix = " get;"
+    return _match(graql_body) + suffix
+
+
+def insert(graql_body):
+    prefix = "insert "
+    return prefix + graql_body
+
+
+def match_insert(match_graql_body, insert_graql_body):
+    return _match(match_graql_body) + "\n" + insert(insert_graql_body)
+
+
+def get_match_id(match_get_response, var_name):
+    return match_get_response[0][var_name]['id']
