@@ -27,3 +27,7 @@ class TestCheckResponseLength(unittest.TestCase):
     def test_both_args_none(self):
         with self.assertRaises(RuntimeError):
             check_response_length([1])
+
+    def test_args_invalid(self):
+        with self.assertRaises(RuntimeError):
+            check_response_length([1], min_length=2, max_length=1)

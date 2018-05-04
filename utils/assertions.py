@@ -22,3 +22,6 @@ def check_response_length(response, min_length=None, max_length=None):
                             "desired number of combinations of variables.").format(len(response), max_length))
     elif min_length is None and max_length is None:
         raise RuntimeError("No bounds set on response length")
+
+    elif min_length > max_length:
+        raise ValueError("Specified minimum length is greater than maximum length, which cannot be satisfied")
