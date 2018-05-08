@@ -13,8 +13,10 @@ distance sub attribute datatype double;
 
 station sub entity,
 	plays stop,
-	plays start,
+	plays beginning,
 	plays end,
+    plays start,
+    plays finish,
     plays origin,
     plays destination,
 	plays contained-station,
@@ -42,7 +44,9 @@ route sub relationship,
 	# lot of other roles, whereas route-line substitutes for where we cannot find a name, but can generate something specific
 	
 	# a West Ruislip to Epping route has a <route-line/route-operator> in the form of the Central Line
-	relates route-operator;
+	relates route-operator,
+
+    plays leg-route;
 
 
 route-section sub entity,
@@ -56,8 +60,8 @@ route-section sub entity,
 
 
 tunnel sub relationship, # could be called a link, transport-link, track-section or tunnel
-	# a <tunnel> has a <start> in the form of a <station>
-	relates start,
+	# a <tunnel> has a <beginning> in the form of a <station>
+	relates beginning,
 
 	# a <tunnel> has a <end> in the form of a <station>
 	relates end,
@@ -86,3 +90,36 @@ neighbourship sub relationship,
 	# a <neighbourship> has a <neighbour> in the form of a <station>
 	relates neighbour,
 	has distance;
+
+
+journey-leg sub relationship,
+    relates start,
+    relates finish,
+    relates leg-route;
+
+
+find-journey-leg sub rule,
+    when {
+        $s1 isa station;
+        $s2 isa station;
+        $rs isa route-section;
+        $t1(beginning: $s1, end: $s2, service: $rs) isa tunnel;
+        $r(section: $rs) isa route;
+    } then {
+        (start: $s1, finish: $s2, leg-route: $r) isa journey-leg;
+    };
+
+
+find-journey-leg-transitive sub rule,
+    when {
+        $s1 isa station;
+        $s2 isa station;
+        $s3 isa station;
+        $r isa route;
+        (start: $s1, finish: $s2, leg-route: $r) isa journey-leg;
+        (start: $s2, finish: $s3, leg-route: $r) isa journey-leg;
+    } then {
+        (start: $s1, finish: $s3, leg-route: $r) isa journey-leg;
+        # When we can do arithmetic then we'll be able to add up the time taken also
+    };
+

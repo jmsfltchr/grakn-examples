@@ -23,7 +23,8 @@ if __name__ == "__main__":
 
     a_id = get_match_id(perform_query(match_get("$s1 isa station, has name \"{}\";".format(a_name))), "s1")
     b_id = get_match_id(perform_query(match_get("$s1 isa station, has name \"{}\";".format(b_name))), "s1")
-    compute_query = "compute path from {}, to {}, in [station, tunnel];".format(a_id, b_id)
+    # compute_query = "compute path from {}, to {}, in [station, tunnel];".format(a_id, b_id)  # Fewest stops
+    compute_query = "compute path from {}, to {}, in [station, route];".format(a_id, b_id)  # Fewest changes
     shortest_paths = perform_query(compute_query)
     # print(shortest_paths)
 
@@ -51,4 +52,5 @@ if __name__ == "__main__":
             print("+ " + station_name)
             station_names.append(station_name)
 
-
+    # TODO find the duration of the valid paths found
+    # TODO first the paths need to be filtered somehow to show that they are connected

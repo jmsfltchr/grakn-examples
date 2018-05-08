@@ -111,7 +111,7 @@ def import_query_generator(perform_query, timetables_dir_path):
                                               ).format(last_naptan_id,
                                                        interval["stopId"])
 
-                        tunnel_query = "$t(start: $s1, end: $s2) isa tunnel;"
+                        tunnel_query = "$t(beginning: $s1, end: $s2) isa tunnel;"
 
                         response = perform_query(match_get(station_pair_query + tunnel_query))
 
