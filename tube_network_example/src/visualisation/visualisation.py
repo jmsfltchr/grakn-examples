@@ -25,6 +25,13 @@ if __name__ == "__main__":
 
     client = grakn.Client(uri=settings.uri, keyspace=settings.keyspace)
     root = tk.Tk()
+    w, h = root.winfo_screenwidth(), root.winfo_screenheight()
+    # root.overrideredirect(1) # Removes the window title bar
+    root.geometry("%dx%d+0+0" % (w, h))
+    root.focus_set()
+    root.bind("<Escape>", lambda e: e.widget.quit())
+
+    # root.configure(background='black')
     # frame = tk.Frame(root, width=1000, height=200)
     canvas = tk.Canvas(root)
     # background_image=tk.PhotoImage(file="map.png")
@@ -44,29 +51,43 @@ if __name__ == "__main__":
     # To do this we need the minimum and maximum of the longitude and latitude, we can query for this easily!
     compute_coords_limits = "compute {} of {}, in station;"
 
-    min_lat = perform_query(compute_coords_limits.format("min", "lat"))
-    max_lat = perform_query(compute_coords_limits.format("max", "lat"))
-    min_lon = perform_query(compute_coords_limits.format("min", "lon"))
-    max_lon = perform_query(compute_coords_limits.format("max", "lon"))
+    # min_lat = perform_query(compute_coords_limits.format("min", "lat"))
+    # max_lat = perform_query(compute_coords_limits.format("max", "lat"))
+    # min_lon = perform_query(compute_coords_limits.format("min", "lon"))
+    # max_lon = perform_query(compute_coords_limits.format("max", "lon"))
+
+    min_lat, max_lat, min_lon, max_lon = 51.402142, 51.705208, -0.611247, 0.250882
 
     # aspect ratio as width over height, which is longitude over latitude
     aspect_ratio = (max_lon - min_lon) / (max_lat - min_lat)
-    new_width = 1000
+    new_width = w
     new_height = new_width / aspect_ratio
 
     station_points = dict()
+    station_name_labels = dict()
+    suffix = " Underground Station"
 
-    station_query = match_get("$s isa station, has naptan-id $naptan-id, has lon $lon, has lat $lat;")
+    station_query = match_get("$s isa station, has name $name, has naptan-id $naptan-id, has lon $lon, has lat $lat;")
     response = perform_query(station_query)
     print("...query complete")
     for i, match in enumerate(response):
         naptan_id = match['naptan-id']['value']
+        name = match['name']['value']
+        if name.endswith(suffix):
+            name = name[:-len(suffix)]
+
         print("drawing station: {}".format(naptan_id))
         lon = scale(float(match['lon']['value']), min_lon, max_lon, 0, new_width)
         lat = scale(float(match['lat']['value']), min_lat, max_lat, 0, new_height)
-        station_points[naptan_id] = canvas.create_circle(lon, lat, station_radius, fill="blue", outline="")
+        station_points[naptan_id] = canvas.create_circle(lon, lat, station_radius, fill="black", outline="")
+        station_name_labels[naptan_id] = canvas.create_text(lon + station_radius, lat + station_radius, text=name,
+                                                            anchor=tk.NW, font=('Johnston', 6, 'bold'))
+    canvas.pack()
 
     # root.wm_geometry("794x370")
     canvas.configure(scrollregion=canvas.bbox("all"))  # Doesn't seem to do anything
     root.title('Map')
+    # root.configure(background="#000")  # Seems not to work on Mac
+    # root.configure(bg="red")
+    # root["bg"] = "black"
     root.mainloop()
