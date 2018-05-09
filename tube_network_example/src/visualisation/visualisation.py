@@ -6,6 +6,8 @@ from utils.utils import check_response_length, match_get, insert, match_insert, 
 
 station_radius = 4
 
+tube_line_colours = {''}
+
 
 def scale(val, old_min, old_max, new_min, new_max):
     old_range = (old_max - old_min)
@@ -81,11 +83,23 @@ if __name__ == "__main__":
         lat = scale(float(match['lat']['value']), min_lat, max_lat, 0, new_height)
         station_points[naptan_id] = canvas.create_circle(lon, lat, station_radius, fill="black", outline="")
         station_name_labels[naptan_id] = canvas.create_text(lon + station_radius, lat + station_radius, text=name,
-                                                            anchor=tk.NW, font=('Johnston', 6, 'bold'))
+                                                            anchor=tk.NW, font=('Johnston', 6, 'bold'), fill="#666")
     canvas.pack()
 
+    def scroll_start(event):
+        canvas.scan_mark(event.x, event.y)
+
+
+    def scroll_move(event):
+        canvas.scan_dragto(event.x, event.y, gain=1)
+
+
+    canvas.bind("<ButtonPress-1>", scroll_start)
+    canvas.bind("<B1-Motion>", scroll_move)
+    canvas.bind()
+
     # root.wm_geometry("794x370")
-    canvas.configure(scrollregion=canvas.bbox("all"))  # Doesn't seem to do anything
+    # canvas.configure(scrollregion=canvas.bbox("all"))  # Doesn't seem to do anything
     root.title('Map')
     # root.configure(background="#000")  # Seems not to work on Mac
     # root.configure(bg="red")
