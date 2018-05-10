@@ -41,7 +41,7 @@ class TubeGui:
     ZOOM_OUT_SCALE = 0.9
 
     STATION_FONT_SIZE = 6
-    STATION_CIRCLE_RADIUS = 2
+    STATION_CIRCLE_RADIUS = 1
 
     LINE_WIDTH = 2
     LINE_SPACING = 0.5
@@ -88,27 +88,6 @@ class TubeGui:
         station_name_labels = dict()
         suffix = " Underground Station"
 
-        # ===== DRAW STATIONS =====
-        station_query = match_get("$s isa station, has name $name, has naptan-id $naptan-id, has lon $lon, has lat $lat;")
-        response = perform_query(station_query)
-        print("...query complete")
-        for match in response:
-            naptan_id = match['naptan-id']['value']
-            name = match['name']['value']
-            if name.endswith(suffix):
-                name = name[:-len(suffix)]
-
-            print("drawing station: {}".format(naptan_id))
-            lon = scale(float(match['lon']['value']), min_lon, max_lon, 0, new_width)
-            lat = new_height - scale(float(match['lat']['value']), min_lat, max_lat, 0, new_height)
-            station_points[naptan_id] = self.canvas.create_circle(lon, lat, self.STATION_CIRCLE_RADIUS,
-                                                                  fill="white", outline="black")
-            station_name_labels[naptan_id] = self.canvas.create_text(lon + self.STATION_CIRCLE_RADIUS,
-                                                                     lat + self.STATION_CIRCLE_RADIUS,
-                                                                     text=name, anchor=tk.NW,
-                                                                     font=('Johnston', self.STATION_FONT_SIZE, 'bold'),
-                                                                     fill="#666")
-
         # ===== DRAW LINES =====
         tunnels = perform_query("match\n"
                                 "$s1 isa station, has lon $lon1, has lat $lat1;\n"
@@ -135,6 +114,7 @@ class TubeGui:
                 # print(tube_line['tl-name']['value'])
                 # print("----------")
 
+                # Trigonometry to draw parallel lines with consistent distance between them
                 dx = lon2 - lon1
                 dy = lat2 - lat1
                 dz = self.LINE_SPACING
@@ -143,11 +123,33 @@ class TubeGui:
                 dy2 = ((grad ** 2 + 1) ** -0.5) * dz
                 dx2 = grad * dy2
 
-                self.canvas.create_line(lon1 - i * dx2, lat1 + i * dy2, lon2 - i * dx2, lat2 + i * dy2, arrow=tk.LAST,
+                self.canvas.create_line(lon1 - (i * dx2), lat1 + (i * dy2), lon2 - (i * dx2), lat2 + (i * dy2),
+                                        # arrow=tk.LAST, arrowshape=(5, 5, 3),  # Let's make an option to show arrows later
                                         fill=self.TUBE_LINE_COLOURS[tube_line['tl-name']['value']],
                                         width=self.LINE_WIDTH)
-            if t > 100:
-                break
+            # if t > 100:
+            #     break
+
+        # ===== DRAW STATIONS =====
+        station_query = match_get("$s isa station, has name $name, has naptan-id $naptan-id, has lon $lon, has lat $lat;")
+        response = perform_query(station_query)
+        print("...query complete")
+        for match in response:
+            naptan_id = match['naptan-id']['value']
+            name = match['name']['value']
+            if name.endswith(suffix):
+                name = name[:-len(suffix)]
+
+            print("drawing station: {}".format(naptan_id))
+            lon = scale(float(match['lon']['value']), min_lon, max_lon, 0, new_width)
+            lat = new_height - scale(float(match['lat']['value']), min_lat, max_lat, 0, new_height)
+            station_points[naptan_id] = self.canvas.create_circle(lon, lat, self.STATION_CIRCLE_RADIUS,
+                                                                  fill="white", outline="black")
+            station_name_labels[naptan_id] = self.canvas.create_text(lon + self.STATION_CIRCLE_RADIUS,
+                                                                     lat + self.STATION_CIRCLE_RADIUS,
+                                                                     text=name, anchor=tk.NW,
+                                                                     font=('Johnston', self.STATION_FONT_SIZE, 'bold'),
+                                                                     fill="#666")
 
         self.canvas.pack()
 
