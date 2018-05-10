@@ -4,7 +4,7 @@ import tube_network_example.settings as settings
 from utils.utils import check_response_length, match_get, insert, match_insert, get_match_id
 
 
-station_radius = 4
+
 
 tube_line_colours = {''}
 
@@ -27,10 +27,15 @@ class TubeGui:
     
     ZOOM_IN_SCALE = 1.1
     ZOOM_OUT_SCALE = 0.9
+
+    STATION_FONT_SIZE = 6
+    STATION_CIRCLE_RADIUS = 2
     
     def __init__(self, root):
         self.root = root
         self.w, self.h = self.root.winfo_screenwidth(), self.root.winfo_screenheight()
+        self.x_pos = int(self.w / 2)
+        self.y_pos = int(self.h / 2)
         self.root.geometry("%dx%d+0+0" % (self.w, self.h))
         self.root.focus_set()
         self.root.bind("<Escape>", lambda e: e.widget.quit())
@@ -81,24 +86,33 @@ class TubeGui:
 
             print("drawing station: {}".format(naptan_id))
             lon = scale(float(match['lon']['value']), min_lon, max_lon, 0, new_width)
-            lat = scale(float(match['lat']['value']), min_lat, max_lat, 0, new_height)
-            station_points[naptan_id] = self.canvas.create_circle(lon, lat, station_radius, fill="black", outline="")
-            station_name_labels[naptan_id] = self.canvas.create_text(lon + station_radius, lat + station_radius,
+            lat = new_height - scale(float(match['lat']['value']), min_lat, max_lat, 0, new_height)
+            station_points[naptan_id] = self.canvas.create_circle(lon, lat, self.STATION_CIRCLE_RADIUS,
+                                                                  fill="white", outline="black")
+            station_name_labels[naptan_id] = self.canvas.create_text(lon + self.STATION_CIRCLE_RADIUS,
+                                                                     lat + self.STATION_CIRCLE_RADIUS,
                                                                      text=name, anchor=tk.NW,
-                                                                     font=('Johnston', 6, 'bold'), fill="#666")
+                                                                     font=('Johnston', self.STATION_FONT_SIZE, 'bold'),
+                                                                     fill="#666")
         self.canvas.pack()
 
     def scroll_start(self, event):
         self.canvas.scan_mark(event.x, event.y)
+        print("scroll_start {}, {}".format(event.x, event.y))
 
     def scroll_move(self, event):
         self.canvas.scan_dragto(event.x, event.y, gain=1)
+        # self.x_pos = event.x
+        # self.y_pos = event.y
+        print("scroll_move {}, {}".format(event.x, event.y))
 
     def key_handler(self, event):
         print(event.char)
         if event.char == "+" or event.char == "=":
+            # self.canvas.scale('all', int(self.x_pos), int(self.y_pos), self.ZOOM_IN_SCALE, self.ZOOM_IN_SCALE)
             self.canvas.scale('all', int(self.w/2), int(self.h/2), self.ZOOM_IN_SCALE, self.ZOOM_IN_SCALE)
-        if event.char == "-" or event.char == "_":
+        elif event.char == "-" or event.char == "_":
+            # self.canvas.scale('all', int(self.x_pos), int(self.y_pos), self.ZOOM_OUT_SCALE, self.ZOOM_OUT_SCALE)
             self.canvas.scale('all', int(self.w/2), int(self.h/2), self.ZOOM_OUT_SCALE, self.ZOOM_OUT_SCALE)
 
 
