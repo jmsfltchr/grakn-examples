@@ -104,18 +104,20 @@ class TubeGui:
                         )
 
     THAMES_WIDTH = 10
-    
+
     ZOOM_IN_SCALE = 1.1
     ZOOM_OUT_SCALE = 0.9
 
     STATION_FONT_SIZE = 6
     STATION_CIRCLE_RADIUS = 1
+    STATION_CENTRALITY_BASE_RADIUS = 0.75
 
     LINE_WIDTH = 2
     LINE_SPACING = 0.5
 
-    def __init__(self, root):
+    def __init__(self, root, grakn_client):
         self.root = root
+        self.grakn_client = grakn_client
         self.w, self.h = self.root.winfo_screenwidth(), self.root.winfo_screenheight()
         self.x_pos = int(self.w / 2)
         self.y_pos = int(self.h / 2)
@@ -130,20 +132,14 @@ class TubeGui:
         self.canvas.bind("<B1-Motion>", self.scroll_move)
         self.canvas.pack(fill=tk.BOTH, expand=1)  # Stretch canvas to root window size.
 
-        def perform_query(graql_string):
-            print(graql_string)
-            # Send the graql query to the server
-            response = client.execute(graql_string)
-            return response
-
         # We want to scale the longitude and latitude to fit the image
         # To do this we need the minimum and maximum of the longitude and latitude, we can query for this easily!
         compute_coords_limits = "compute {} of {}, in station;"
 
-        # min_lat = perform_query(compute_coords_limits.format("min", "lat"))
-        # max_lat = perform_query(compute_coords_limits.format("max", "lat"))
-        # min_lon = perform_query(compute_coords_limits.format("min", "lon"))
-        # max_lon = perform_query(compute_coords_limits.format("max", "lon"))
+        # min_lat = self.perform_query(compute_coords_limits.format("min", "lat"))
+        # max_lat = self.perform_query(compute_coords_limits.format("max", "lat"))
+        # min_lon = self.perform_query(compute_coords_limits.format("min", "lon"))
+        # max_lon = self.perform_query(compute_coords_limits.format("max", "lon"))
 
         min_lat, max_lat, min_lon, max_lon = 51.402142, 51.705208, -0.611247, 0.250882
 
@@ -163,7 +159,7 @@ class TubeGui:
                                               joinstyle=tk.ROUND)
 
         # ===== DRAW LINES =====
-        tunnels = perform_query("match\n"
+        tunnels = self.perform_query("match\n"
                                 "$s1 isa station, has lon $lon1, has lat $lat1;\n"
                                 "$s2 isa station, has lon $lon2, has lat $lat2;\n"
                                 "$tunnel(beginning: $s1, end: $s2) isa tunnel;\n"
@@ -171,7 +167,7 @@ class TubeGui:
 
         for t, tunnel in enumerate(tunnels):
             # Then, using the tunnel's ID, get the tube-lines that run through the tunnel
-            tube_lines = perform_query(("match\n"
+            tube_lines = self.perform_query(("match\n"
                                         "$rs isa route-section;\n"
                                         "$tunnel(service: $rs) id {};\n"
                                         "$tube-line isa tube-line, has name $tl-name;\n"
@@ -182,7 +178,6 @@ class TubeGui:
                                                   min_lon, max_lon, min_lat, max_lat, new_width, new_height)
             lon2, lat2 = scale_coords(float(tunnel['lon2']['value']), float(tunnel['lat2']['value']),
                                                   min_lon, max_lon, min_lat, max_lat, new_width, new_height)
-
 
             # Sort the tube lines alphabetically to get a consistent pattern
             tube_line_names = []
@@ -210,31 +205,43 @@ class TubeGui:
             #     break
 
         # ===== DRAW STATIONS =====
-        station_points = dict()
+        self.station_points = dict()
+        self.station_canvas_coords = dict()
+        self.station_centrality_points = dict()
         station_name_labels = dict()
         suffix = " Underground Station"
 
-        station_query = match_get("$s isa station, has name $name, has naptan-id $naptan-id, has lon $lon, has lat $lat;")
-        response = perform_query(station_query)
+        station_query = match_get("$s isa station, has name $name, has lon $lon, has lat $lat;")
+        response = self.perform_query(station_query)
         print("...query complete")
         for match in response:
-            naptan_id = match['naptan-id']['value']
+            station_id = match['s']['id']
             name = match['name']['value']
             if name.endswith(suffix):
                 name = name[:-len(suffix)]
 
-            print("drawing station: {}".format(naptan_id))
+            print("drawing station: {}".format(station_id))
             lon = scale(float(match['lon']['value']), min_lon, max_lon, 0, new_width)
             lat = new_height - scale(float(match['lat']['value']), min_lat, max_lat, 0, new_height)
-            station_points[naptan_id] = self.canvas.create_circle(lon, lat, self.STATION_CIRCLE_RADIUS,
+            self.station_canvas_coords[station_id] = (lon, lat)
+            self.station_points[station_id] = self.canvas.create_circle(lon, lat, self.STATION_CIRCLE_RADIUS,
                                                                   fill="white", outline="black")
-            station_name_labels[naptan_id] = self.canvas.create_text(lon + self.STATION_CIRCLE_RADIUS,
+            station_name_labels[station_id] = self.canvas.create_text(lon + self.STATION_CIRCLE_RADIUS,
                                                                      lat + self.STATION_CIRCLE_RADIUS,
                                                                      text=name, anchor=tk.NW,
                                                                      font=('Johnston', self.STATION_FONT_SIZE, 'bold'),
                                                                      fill="#666")
 
         self.canvas.pack()
+
+        # ===== Event state variables =====
+        self._degree_centrality_on = False
+
+    def perform_query(self, graql_string):
+        print(graql_string)
+        # Send the graql query to the server
+        response = self.grakn_client.execute(graql_string)
+        return response
 
     def scroll_start(self, event):
         self.canvas.scan_mark(event.x, event.y)
@@ -254,12 +261,41 @@ class TubeGui:
         elif event.char == "-" or event.char == "_":
             # self.canvas.scale('all', int(self.x_pos), int(self.y_pos), self.ZOOM_OUT_SCALE, self.ZOOM_OUT_SCALE)
             self.canvas.scale('all', int(self.w/2), int(self.h/2), self.ZOOM_OUT_SCALE, self.ZOOM_OUT_SCALE)
+        elif event.char == "z":
+            self.show_zones()
+        elif event.char == "g":
+            self.show_centrality()
+
+    def show_zones(self):
+        pass
+
+    def show_centrality(self):
+        if not self._degree_centrality_on:
+            query = "compute centrality of station, in [station, tunnel], using degree;"
+            centrality = self.perform_query(query)
+            for degree, concept_ids in centrality.items():
+                for concept_id in concept_ids:
+                    station_element_id = self.station_points[concept_id]
+                    # self.canvas.scale(element_id, 0, 0, degree, degree)
+                    lon, lat = self.station_canvas_coords[concept_id]
+
+                    centrality_element_id = self.canvas.create_circle(lon, lat,
+                                                                      self.STATION_CENTRALITY_BASE_RADIUS * int(degree),
+                                                                      fill="#F88", outline="")
+
+                    self.station_centrality_points[concept_id] = centrality_element_id
+                    self.canvas.tag_lower(centrality_element_id, station_element_id)
+        else:
+            for concept_id, point_id in self.station_centrality_points.items():
+                self.canvas.delete(point_id)
+
+        self._degree_centrality_on = not self._degree_centrality_on
 
 
 if __name__ == "__main__":
 
-    client = grakn.Client(uri=settings.uri, keyspace=settings.keyspace)
+    grakn_client = grakn.Client(uri=settings.uri, keyspace=settings.keyspace)
     root = tk.Tk()
 
-    tube_gui = TubeGui(root)
+    tube_gui = TubeGui(root, grakn_client)
     root.mainloop()
