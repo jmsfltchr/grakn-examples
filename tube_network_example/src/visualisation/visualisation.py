@@ -123,7 +123,7 @@ class TubeGui:
         self.root.focus_set()
         self.root.bind("<Escape>", lambda e: e.widget.quit())
         self.root.bind("<Key>", self.key_handler)
-        self.root.title('Map')
+        self.root.title('London Tube Map')
 
         self.canvas = tk.Canvas(self.root)
         self.canvas.bind("<ButtonPress-1>", self.scroll_start)
@@ -184,10 +184,14 @@ class TubeGui:
                                                   min_lon, max_lon, min_lat, max_lat, new_width, new_height)
 
 
-            # print("Tunnel ID: {}".format(tunnel["tunnel"]['id']))
-            for i, tube_line in enumerate(tube_lines):
-                # print(tube_line['tl-name']['value'])
-                # print("----------")
+            # Sort the tube lines alphabetically to get a consistent pattern
+            tube_line_names = []
+            for tube_line in tube_lines:
+                tube_line_names.append(tube_line['tl-name']['value'])
+
+            tube_line_names = sorted(tube_line_names)
+
+            for i, tube_line_name in enumerate(tube_line_names):
 
                 # Trigonometry to draw parallel lines with consistent distance between them
                 dx = lon2 - lon1
@@ -200,7 +204,7 @@ class TubeGui:
 
                 self.canvas.create_line(lon1 - (i * dx2), lat1 + (i * dy2), lon2 - (i * dx2), lat2 + (i * dy2),
                                         # arrow=tk.LAST, arrowshape=(5, 5, 3),  # Let's make an option to show arrows later
-                                        fill=self.TUBE_LINE_COLOURS[tube_line['tl-name']['value']],
+                                        fill=self.TUBE_LINE_COLOURS[tube_line_name],
                                         width=self.LINE_WIDTH)
             # if t > 10:
             #     break
