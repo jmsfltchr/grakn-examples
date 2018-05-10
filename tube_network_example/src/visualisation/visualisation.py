@@ -14,6 +14,12 @@ def scale(val, old_min, old_max, new_min, new_max):
     return new_val
 
 
+def scale_coords(lon, lat, min_lon, max_lon, min_lat, max_lat, new_width, new_height):
+    lon = scale(lon, min_lon, max_lon, 0, new_width)
+    lat = new_height - scale(lat, min_lat, max_lat, 0, new_height)
+    return lon, lat
+
+
 def _create_circle(self, x, y, r, **kwargs):
     return self.create_oval(x-r, y-r, x+r, y+r, **kwargs)
 
@@ -36,6 +42,68 @@ class TubeGui:
         "Victoria": "#0098D4",
         "Waterloo & City": "#95CDBA",
     }
+
+    THAMES_WAYPOINTS = (
+                        (51.388592, -0.426814),
+                        (51.404487, -0.409858),
+                        (51.409538, -0.390457),
+                        (51.407749, -0.379153),
+                        (51.412011, -0.361944),
+                        (51.405223, -0.345663),
+                        (51.391487, -0.326768),
+                        (51.400803, -0.309137),
+                        (51.424900, -0.308209),
+                        (51.432526, -0.326262),
+                        (51.443253, -0.329383),
+                        (51.451718, -0.303738),
+                        (51.456028, -0.305088),
+                        (51.465068, -0.320778),
+                        (51.471164, -0.319176),
+                        (51.484088, -0.297243),
+                        (51.487082, -0.288217),
+                        (51.483983, -0.279444),
+                        (51.471742, -0.266622),
+                        (51.470839, -0.261951),
+                        (51.474607, -0.251973),
+                        (51.484884, -0.249098),
+                        (51.489681, -0.237854),
+                        (51.487997, -0.229271),
+                        (51.473779, -0.223284),
+                        (51.466401, -0.211568),
+                        (51.464329, -0.191527),
+                        (51.467697, -0.182686),
+                        (51.480180, -0.175627),
+                        (51.484764, -0.148011),
+                        (51.483788, -0.137282),
+                        (51.487129, -0.127519),
+                        (51.506112, -0.120438),
+                        (51.508943, -0.116210),
+                        (51.508916, -0.094474),
+                        (51.505297, -0.074797),
+                        (51.502198, -0.064648),
+                        (51.502131, -0.056944),
+                        (51.508155, -0.044370),
+                        (51.508035, -0.035337),
+                        (51.505244, -0.029843),
+                        (51.491952, -0.029285),
+                        (51.485566, -0.020659),
+                        (51.485272, -0.007892),
+                        (51.489935, -0.001047),
+                        (51.501490, -0.005360),
+                        (51.507260, 0.001378),
+                        (51.506526, 0.005648),
+                        (51.496922, 0.021677),
+                        (51.497620, 0.073815),
+                        (51.511549, 0.090750),
+                        (51.516348, 0.127855),
+                        (51.506580, 0.167984),
+                        (51.503888, 0.172763),
+                        (51.485042, 0.184526),
+                        (51.485852, 0.213678),
+                        (51.457240, 0.280714),
+                        )
+
+    THAMES_WIDTH = 10
     
     ZOOM_IN_SCALE = 1.1
     ZOOM_OUT_SCALE = 0.9
@@ -84,9 +152,15 @@ class TubeGui:
         new_width = self.w
         new_height = new_width / aspect_ratio
 
-        station_points = dict()
-        station_name_labels = dict()
-        suffix = " Underground Station"
+        # ===== DRAW RIVER THAMES =====
+
+        scaled_thames_coords = []
+        for lat, lon in self.THAMES_WAYPOINTS:
+            lon, lat = scale_coords(lon, lat, min_lon, max_lon, min_lat, max_lat, new_width, new_height)
+            scaled_thames_coords.append((lon, lat))
+
+        thames_line = self.canvas.create_line(*scaled_thames_coords, width=self.THAMES_WIDTH, fill="#def",
+                                              joinstyle=tk.ROUND)
 
         # ===== DRAW LINES =====
         tunnels = perform_query("match\n"
@@ -104,10 +178,11 @@ class TubeGui:
                                         "$route(section: $rs, route-operator: $tube-line) isa route;\n"
                                         "get $tl-name;").format(tunnel["tunnel"]['id']))
 
-            lon1 = scale(float(tunnel['lon1']['value']), min_lon, max_lon, 0, new_width)
-            lon2 = scale(float(tunnel['lon2']['value']), min_lon, max_lon, 0, new_width)
-            lat1 = new_height - scale(float(tunnel['lat1']['value']), min_lat, max_lat, 0, new_height)
-            lat2 = new_height - scale(float(tunnel['lat2']['value']), min_lat, max_lat, 0, new_height)
+            lon1, lat1 = scale_coords(float(tunnel['lon1']['value']), float(tunnel['lat1']['value']),
+                                                  min_lon, max_lon, min_lat, max_lat, new_width, new_height)
+            lon2, lat2 = scale_coords(float(tunnel['lon2']['value']), float(tunnel['lat2']['value']),
+                                                  min_lon, max_lon, min_lat, max_lat, new_width, new_height)
+
 
             # print("Tunnel ID: {}".format(tunnel["tunnel"]['id']))
             for i, tube_line in enumerate(tube_lines):
@@ -127,10 +202,14 @@ class TubeGui:
                                         # arrow=tk.LAST, arrowshape=(5, 5, 3),  # Let's make an option to show arrows later
                                         fill=self.TUBE_LINE_COLOURS[tube_line['tl-name']['value']],
                                         width=self.LINE_WIDTH)
-            # if t > 100:
+            # if t > 10:
             #     break
 
         # ===== DRAW STATIONS =====
+        station_points = dict()
+        station_name_labels = dict()
+        suffix = " Underground Station"
+
         station_query = match_get("$s isa station, has name $name, has naptan-id $naptan-id, has lon $lon, has lat $lat;")
         response = perform_query(station_query)
         print("...query complete")
