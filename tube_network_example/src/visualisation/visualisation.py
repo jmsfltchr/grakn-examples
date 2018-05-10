@@ -86,6 +86,9 @@ if __name__ == "__main__":
                                                             anchor=tk.NW, font=('Johnston', 6, 'bold'), fill="#666")
     canvas.pack()
 
+    zoom_in_scale = 1.1
+    zoom_out_scale = 0.9
+
     def scroll_start(event):
         canvas.scan_mark(event.x, event.y)
 
@@ -93,10 +96,25 @@ if __name__ == "__main__":
     def scroll_move(event):
         canvas.scan_dragto(event.x, event.y, gain=1)
 
+    def wheel(event):
+        x = canvas.canvasx(event.x)
+        y = canvas.canvasy(event.y)
+        canvas.scale('all', x, y, scale, scale)
+
+    def key_handler(event):
+        print(event.char)
+        if event.char == "+":
+            canvas.scale('all', int(w/2), int(h/2), zoom_in_scale, zoom_in_scale)
+        if event.char == "_":
+            canvas.scale('all', int(w/2), int(h/2), zoom_out_scale, zoom_out_scale)
 
     canvas.bind("<ButtonPress-1>", scroll_start)
     canvas.bind("<B1-Motion>", scroll_move)
-    canvas.bind()
+    # canvas.bind_all('<MouseWheel>', wheel)  # with Windows and MacOS, but not Linux
+    # canvas.bind_all('<Button-5>', wheel)  # only with Linux, wheel scroll down
+    # canvas.bind_all('<Button-4>', wheel)  # only with Linux, wheel scroll up
+
+    root.bind("<Key>", key_handler)
 
     # root.wm_geometry("794x370")
     # canvas.configure(scrollregion=canvas.bbox("all"))  # Doesn't seem to do anything
@@ -104,4 +122,11 @@ if __name__ == "__main__":
     # root.configure(background="#000")  # Seems not to work on Mac
     # root.configure(bg="red")
     # root["bg"] = "black"
+    # canvas.scale(1.5, 1.5)
     root.mainloop()
+    # while True:
+    #     try:
+    #         root.mainloop()
+    #         break
+    #     except UnicodeDecodeError:
+    #         pass
