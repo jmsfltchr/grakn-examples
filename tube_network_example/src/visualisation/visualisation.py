@@ -110,7 +110,15 @@ class TubeGui:
 
     STATION_FONT_SIZE = 6
     STATION_CIRCLE_RADIUS = 1
-    STATION_CENTRALITY_BASE_RADIUS = 0.75
+
+    STATION_K_CORE_COLOUR = "#AAF"
+    STATION_K_CORE_MAX_RADIUS = 8
+
+    STATION_DEGREE_COLOUR = "#FAA"
+    STATION_DEGREE_MAX_RADIUS = 10
+
+    ROUTES_DEGREE_COLOUR = "#AFA"
+    ROUTES_DEGREE_MAX_RADIUS = 8
 
     LINE_WIDTH = 2
     LINE_SPACING = 0.5
@@ -237,7 +245,7 @@ class TubeGui:
         self.canvas.pack()
 
         # ===== Event state variables =====
-        self._degree_centrality_on = False
+        self._displaying_centrality = False
         self._scale = 1
 
     def perform_query(self, graql_string):
@@ -260,19 +268,20 @@ class TubeGui:
     def key_handler(self, event):
         print(event.char)
         if event.char == "+" or event.char == "=":
-            # self.canvas.scale('all', int(self.x_pos), int(self.y_pos), self.ZOOM_IN_SCALE, self.ZOOM_IN_SCALE)
-            # self.canvas.scale('all', int(self.w/2), int(self.h/2), self.ZOOM_IN_SCALE, self.ZOOM_IN_SCALE)
-            # self.canvas.scale('all', 0, 0, self.ZOOM_IN_SCALE, self.ZOOM_IN_SCALE)
             self.zoom("in")
         elif event.char == "-" or event.char == "_":
-            # self.canvas.scale('all', int(self.x_pos), int(self.y_pos), self.ZOOM_OUT_SCALE, self.ZOOM_OUT_SCALE)
-            # self.canvas.scale('all', int(self.w/2), int(self.h/2), self.ZOOM_OUT_SCALE, self.ZOOM_OUT_SCALE)
-            # self.canvas.scale('all', 0, 0, self.ZOOM_OUT_SCALE, self.ZOOM_OUT_SCALE)
             self.zoom("out")
         elif event.char == "z":
             self.show_zones()
         elif event.char == "g":
-            self.show_centrality()
+            query = "compute centrality of station, in [station, tunnel], using degree;"
+            self.display_centrality(query, self.STATION_DEGREE_MAX_RADIUS, self.STATION_DEGREE_COLOUR)
+        elif event.char == "k":
+            query = "compute centrality of station, in [station, tunnel], using k-core;"
+            self.display_centrality(query, self.STATION_K_CORE_MAX_RADIUS, self.STATION_K_CORE_COLOUR)
+        elif event.char == "r":
+            query = "compute centrality of station, in [station, route], using degree;"
+            self.display_centrality(query, self.ROUTES_DEGREE_MAX_RADIUS, self.ROUTES_DEGREE_COLOUR)
 
     def zoom(self, direction):
         if direction == "in":
@@ -283,6 +292,7 @@ class TubeGui:
             raise ValueError("Call to zoom didn't specify a valid direction")
 
         self.canvas.scale('all', 0, 0, scaling, scaling)
+        # self.canvas.scale('all', int(self.x_pos), int(self.y_pos), scaling, scaling)
         self._scale *= scaling
 
     def transform_to_current_scale(self, val):
@@ -291,11 +301,14 @@ class TubeGui:
     def show_zones(self):
         pass
 
-    def show_centrality(self):
-        if not self._degree_centrality_on:
-            query = "compute centrality of station, in [station, tunnel], using degree;"
+    def display_centrality(self, query, upper_radius, colour):
+        if not self._displaying_centrality:
             centrality = self.perform_query(query)
-            for degree, concept_ids in centrality.items():
+
+            # Find the max centrality value
+            max_score = max([int(s) for s in centrality.keys()])
+
+            for score, concept_ids in centrality.items():
                 for concept_id in concept_ids:
                     station_element_id = self.station_points[concept_id]
                     lon, lat = self.station_canvas_coords[concept_id]
@@ -306,11 +319,12 @@ class TubeGui:
                     lon = self.transform_to_current_scale(lon)
                     lat = self.transform_to_current_scale(lat)
 
-                    radius = self.transform_to_current_scale(self.STATION_CENTRALITY_BASE_RADIUS * int(degree))
+                    # radius = self.transform_to_current_scale(base_radius * int(score))
+                    radius = self.transform_to_current_scale((int(score) / max_score) * upper_radius)
 
                     centrality_element_id = self.canvas.create_circle(lon, lat,
                                                                       radius,
-                                                                      fill="#F88", outline="")
+                                                                      fill=colour, outline="")
 
                     self.station_centrality_points[concept_id] = centrality_element_id
                     self.canvas.tag_lower(centrality_element_id, station_element_id)
@@ -318,7 +332,7 @@ class TubeGui:
             for concept_id, point_id in self.station_centrality_points.items():
                 self.canvas.delete(point_id)
 
-        self._degree_centrality_on = not self._degree_centrality_on
+        self._displaying_centrality = not self._displaying_centrality
 
 
 if __name__ == "__main__":
