@@ -106,7 +106,7 @@ class TubeGui:
     THAMES_WIDTH = 10
 
     ZOOM_IN_SCALE = 1.1
-    ZOOM_OUT_SCALE = 0.9
+    ZOOM_OUT_SCALE = 1/1.1
 
     STATION_FONT_SIZE = 6
     STATION_CIRCLE_RADIUS = 1
@@ -221,8 +221,10 @@ class TubeGui:
                 name = name[:-len(suffix)]
 
             print("drawing station: {}".format(station_id))
-            lon = scale(float(match['lon']['value']), min_lon, max_lon, 0, new_width)
-            lat = new_height - scale(float(match['lat']['value']), min_lat, max_lat, 0, new_height)
+
+            lon, lat = scale_coords(float(match['lon']['value']), float(match['lat']['value']),
+                                    min_lon, max_lon, min_lat, max_lat, new_width, new_height)
+
             self.station_canvas_coords[station_id] = (lon, lat)
             self.station_points[station_id] = self.canvas.create_circle(lon, lat, self.STATION_CIRCLE_RADIUS,
                                                                   fill="white", outline="black")
@@ -236,6 +238,7 @@ class TubeGui:
 
         # ===== Event state variables =====
         self._degree_centrality_on = False
+        self._scale = 1
 
     def perform_query(self, graql_string):
         print(graql_string)
@@ -249,22 +252,41 @@ class TubeGui:
 
     def scroll_move(self, event):
         self.canvas.scan_dragto(event.x, event.y, gain=1)
-        # self.x_pos = event.x
-        # self.y_pos = event.y
-        # print("scroll_move {}, {}".format(event.x, event.y))
+        self.x_pos = event.x
+        self.y_pos = event.y
+        print("scroll_move {}, {}".format(event.x, event.y))
+        print("scroll_move: canvas {}, {}".format(self.canvas.canvasx(event.x), self.canvas.canvasy(event.y)))
 
     def key_handler(self, event):
         print(event.char)
         if event.char == "+" or event.char == "=":
             # self.canvas.scale('all', int(self.x_pos), int(self.y_pos), self.ZOOM_IN_SCALE, self.ZOOM_IN_SCALE)
-            self.canvas.scale('all', int(self.w/2), int(self.h/2), self.ZOOM_IN_SCALE, self.ZOOM_IN_SCALE)
+            # self.canvas.scale('all', int(self.w/2), int(self.h/2), self.ZOOM_IN_SCALE, self.ZOOM_IN_SCALE)
+            # self.canvas.scale('all', 0, 0, self.ZOOM_IN_SCALE, self.ZOOM_IN_SCALE)
+            self.zoom("in")
         elif event.char == "-" or event.char == "_":
             # self.canvas.scale('all', int(self.x_pos), int(self.y_pos), self.ZOOM_OUT_SCALE, self.ZOOM_OUT_SCALE)
-            self.canvas.scale('all', int(self.w/2), int(self.h/2), self.ZOOM_OUT_SCALE, self.ZOOM_OUT_SCALE)
+            # self.canvas.scale('all', int(self.w/2), int(self.h/2), self.ZOOM_OUT_SCALE, self.ZOOM_OUT_SCALE)
+            # self.canvas.scale('all', 0, 0, self.ZOOM_OUT_SCALE, self.ZOOM_OUT_SCALE)
+            self.zoom("out")
         elif event.char == "z":
             self.show_zones()
         elif event.char == "g":
             self.show_centrality()
+
+    def zoom(self, direction):
+        if direction == "in":
+            scaling = self.ZOOM_IN_SCALE
+        elif direction == "out":
+            scaling = self.ZOOM_OUT_SCALE
+        else:
+            raise ValueError("Call to zoom didn't specify a valid direction")
+
+        self.canvas.scale('all', 0, 0, scaling, scaling)
+        self._scale *= scaling
+
+    def transform_to_current_scale(self, val):
+        return val * self._scale
 
     def show_zones(self):
         pass
@@ -276,11 +298,18 @@ class TubeGui:
             for degree, concept_ids in centrality.items():
                 for concept_id in concept_ids:
                     station_element_id = self.station_points[concept_id]
-                    # self.canvas.scale(element_id, 0, 0, degree, degree)
                     lon, lat = self.station_canvas_coords[concept_id]
 
+                    # TODO Need to fix the relative coordinate systems, after zooming and panning these elements are
+                    # TODO added incorrectly
+                    # TODO This doesn't help, but it's the right track
+                    lon = self.transform_to_current_scale(lon)
+                    lat = self.transform_to_current_scale(lat)
+
+                    radius = self.transform_to_current_scale(self.STATION_CENTRALITY_BASE_RADIUS * int(degree))
+
                     centrality_element_id = self.canvas.create_circle(lon, lat,
-                                                                      self.STATION_CENTRALITY_BASE_RADIUS * int(degree),
+                                                                      radius,
                                                                       fill="#F88", outline="")
 
                     self.station_centrality_points[concept_id] = centrality_element_id
