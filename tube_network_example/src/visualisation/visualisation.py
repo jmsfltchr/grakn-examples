@@ -213,7 +213,7 @@ class TubeGui:
             #     break
 
         # ===== DRAW STATIONS =====
-        self.station_points = dict()
+        self.station_point_ids = dict()
         self.station_canvas_coords = dict()
         self.station_centrality_points = dict()
         station_name_labels = dict()
@@ -234,13 +234,20 @@ class TubeGui:
                                     min_lon, max_lon, min_lat, max_lat, new_width, new_height)
 
             self.station_canvas_coords[station_id] = (lon, lat)
-            self.station_points[station_id] = self.canvas.create_circle(lon, lat, self.STATION_CIRCLE_RADIUS,
+            station_tag = self.canvas.create_circle(lon, lat, self.STATION_CIRCLE_RADIUS,
                                                                   fill="white", outline="black")
-            station_name_labels[station_id] = self.canvas.create_text(lon + self.STATION_CIRCLE_RADIUS,
-                                                                     lat + self.STATION_CIRCLE_RADIUS,
-                                                                     text=name, anchor=tk.NW,
-                                                                     font=('Johnston', self.STATION_FONT_SIZE, 'bold'),
-                                                                     fill="#666")
+            self.station_point_ids[station_id] = station_tag
+
+            l = lambda event, widget=station_tag, id=station_id: self.on_station_click(event, widget, id)
+            self.canvas.tag_bind(self.station_point_ids[station_id], '<ButtonPress-1>', l)
+
+            station_label_tag = self.canvas.create_text(lon + self.STATION_CIRCLE_RADIUS,
+                                                        lat + self.STATION_CIRCLE_RADIUS,
+                                                        text=name, anchor=tk.NW,
+                                                        font=('Johnston', self.STATION_FONT_SIZE, 'bold'),
+                                                        fill="#666")
+            station_name_labels[station_id] = station_label_tag
+            self.canvas.tag_bind(station_label_tag, '<ButtonPress-1>', l)
 
         self.canvas.pack()
 
@@ -283,6 +290,9 @@ class TubeGui:
             query = "compute centrality of station, in [station, route], using degree;"
             self.display_centrality(query, self.ROUTES_DEGREE_MAX_RADIUS, self.ROUTES_DEGREE_COLOUR)
 
+    def on_station_click(self, event, widget, station_id):
+        pass
+
     def zoom(self, direction):
         if direction == "in":
             scaling = self.ZOOM_IN_SCALE
@@ -310,7 +320,7 @@ class TubeGui:
 
             for score, concept_ids in centrality.items():
                 for concept_id in concept_ids:
-                    station_element_id = self.station_points[concept_id]
+                    station_element_id = self.station_point_ids[concept_id]
                     lon, lat = self.station_canvas_coords[concept_id]
 
                     # TODO Need to fix the relative coordinate systems, after zooming and panning these elements are
