@@ -345,7 +345,6 @@ class TubeGui:
 
     def get_station_point_coords(self, station_id):
         x0, y0, x1, y1 = self.canvas.coords(self.station_point_ids[station_id])
-        # point = int((x0 + x1) / 2), int((y0 + y1) / 2)
         point = (x0 + x1) / 2, (y0 + y1) / 2
         return point
 
@@ -362,8 +361,17 @@ class TubeGui:
             raise ValueError("Call to zoom didn't specify a valid direction")
 
         self.canvas.scale('all', 0, 0, scaling, scaling)
-        # self.canvas.scale('all', int(self.x_pos), int(self.y_pos), scaling, scaling)
         self._scale *= scaling
+        """
+        Window width w
+        Window height h
+        Current position panned to: pos_x, pos_y, consider first 0, 0
+        We're interested in how the centre of the screen moves, which goes from w/2 to (w/2)/scaling = (w/2) * (1 - 1 / scaling)
+        """
+        factor = -(1/2) * (1 - 1 / scaling)
+        self.canvas.scan_mark(0, 0)
+        self.canvas.scan_dragto(int(self.transform_to_current_scale(self.w) * factor),
+                                int(self.transform_to_current_scale(self.h) * factor), gain=1)
 
     def transform_to_current_scale(self, val):
         return val * self._scale
