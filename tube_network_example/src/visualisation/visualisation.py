@@ -120,6 +120,9 @@ class TubeGui:
     ROUTES_DEGREE_COLOUR = "#AFA"
     ROUTES_DEGREE_MAX_RADIUS = 8
 
+    TUNNEL_SHORTEST_PATH_COLOUR = "#DDD"
+    TUNNEL_SHORTEST_PATH_WIDTH = 10
+
     LINE_WIDTH = 2
     LINE_SPACING = 0.5
 
@@ -239,7 +242,10 @@ class TubeGui:
             self.station_point_ids[station_id] = station_tag
 
             l = lambda event, widget=station_tag, id=station_id: self.on_station_click(event, widget, id)
-            self.canvas.tag_bind(self.station_point_ids[station_id], '<ButtonPress-1>', l)
+
+            event_sequence = "<Shift-ButtonPress-1>"
+
+            self.canvas.tag_bind(self.station_point_ids[station_id], event_sequence, l)
 
             station_label_tag = self.canvas.create_text(lon + self.STATION_CIRCLE_RADIUS,
                                                         lat + self.STATION_CIRCLE_RADIUS,
@@ -247,13 +253,15 @@ class TubeGui:
                                                         font=('Johnston', self.STATION_FONT_SIZE, 'bold'),
                                                         fill="#666")
             station_name_labels[station_id] = station_label_tag
-            self.canvas.tag_bind(station_label_tag, '<ButtonPress-1>', l)
+            self.canvas.tag_bind(station_label_tag, event_sequence, l)
 
         self.canvas.pack()
 
         # ===== Event state variables =====
         self._displaying_centrality = False
         self._scale = 1
+        self._shortest_path_stations = []
+        self._shortest_path_lines = []
 
     def perform_query(self, graql_string):
         print(graql_string)
@@ -289,9 +297,48 @@ class TubeGui:
         elif event.char == "r":
             query = "compute centrality of station, in [station, route], using degree;"
             self.display_centrality(query, self.ROUTES_DEGREE_MAX_RADIUS, self.ROUTES_DEGREE_COLOUR)
+        elif event.char == "q":
+            self.clear_shortest_path()
 
     def on_station_click(self, event, widget, station_id):
-        pass
+        self._shortest_path_stations.append(station_id)
+
+        if len(self._shortest_path_stations) > 1:
+            query = "compute path from {}, to {}, in [station, tunnel];".format(self._shortest_path_stations[-2],
+                                                                                self._shortest_path_stations[-1])
+            shortest_path = self.perform_query(query)
+            self.display_shortest_path(shortest_path, self.TUNNEL_SHORTEST_PATH_COLOUR, self.TUNNEL_SHORTEST_PATH_WIDTH)
+
+    def display_shortest_path(self, shortest_path, colour, width):
+        # The response contains the different permutations for each path through stations. We are mainly interested in
+        # which stations the path passes through
+        station_paths = []
+        for path in shortest_path:
+            station_ids = []
+            for concept in path:
+                if concept['type']['label'] == 'station':
+                    station_id = concept['id']
+                    station_ids.append(station_id)
+            station_paths.append(station_ids)
+
+        # Get the unique paths
+        unique_paths = [list(x) for x in set(tuple(x) for x in station_paths)]
+
+        for unique_path in unique_paths:
+            path_points = []
+            for station_id in unique_path:
+                # TODO Look at uniqueness of these paths
+                x0, y0, x1, y1 = self.canvas.coords(self.station_point_ids[station_id])
+                point = int((x0 + x1) / 2), int((y0 + y1) / 2)
+                path_points.append(point)
+
+            path = self.canvas.create_line(*path_points, width=width, fill=colour, joinstyle=tk.ROUND, dash=(3, 3))
+            self._shortest_path_lines.append(path)
+            self.canvas.tag_lower(path, 0)
+
+    def clear_shortest_path(self):
+        self.canvas.delete(*self._shortest_path_lines)
+        self._shortest_path_stations = []
 
     def zoom(self, direction):
         if direction == "in":
