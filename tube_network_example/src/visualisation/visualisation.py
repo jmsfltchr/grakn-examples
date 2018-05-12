@@ -261,7 +261,7 @@ class TubeGui:
         self._displaying_centrality = False
         self._scale = 1
         self._shortest_path_stations = []
-        self._shortest_path_lines = []
+        self._shortest_path_elements = []
 
     def perform_query(self, graql_string):
         print(graql_string)
@@ -303,6 +303,13 @@ class TubeGui:
     def on_station_click(self, event, widget, station_id):
         self._shortest_path_stations.append(station_id)
 
+        x, y = self.get_station_point_coords(station_id)
+        r = self.transform_to_current_scale(2 * self.STATION_CIRCLE_RADIUS)
+        c = self.canvas.create_circle(x, y, r, fill=self.TUNNEL_SHORTEST_PATH_COLOUR, outline="")
+        self.canvas.tag_lower(c, 1)
+
+        self._shortest_path_elements.append(c)
+
         if len(self._shortest_path_stations) > 1:
             query = "compute path from {}, to {}, in [station, tunnel];".format(self._shortest_path_stations[-2],
                                                                                 self._shortest_path_stations[-1])
@@ -333,11 +340,17 @@ class TubeGui:
                 path_points.append(point)
 
             path = self.canvas.create_line(*path_points, width=width, fill=colour, joinstyle=tk.ROUND, dash=(3, 3))
-            self._shortest_path_lines.append(path)
-            self.canvas.tag_lower(path, 0)
+            self._shortest_path_elements.append(path)
+            self.canvas.tag_lower(path, 1)
+
+    def get_station_point_coords(self, station_id):
+        x0, y0, x1, y1 = self.canvas.coords(self.station_point_ids[station_id])
+        # point = int((x0 + x1) / 2), int((y0 + y1) / 2)
+        point = (x0 + x1) / 2, (y0 + y1) / 2
+        return point
 
     def clear_shortest_path(self):
-        self.canvas.delete(*self._shortest_path_lines)
+        self.canvas.delete(*self._shortest_path_elements)
         self._shortest_path_stations = []
 
     def zoom(self, direction):
