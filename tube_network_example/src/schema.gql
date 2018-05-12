@@ -15,22 +15,22 @@ station sub entity,
 	plays stop,
 	plays beginning,
 	plays end,
-    plays start,
-    plays finish,
-    plays origin,
-    plays destination,
+  plays start,
+  plays finish,
+  plays origin,
+  plays destination,
 	plays contained-station,
 	plays neighbour,
 	has naptan-id,
-    has name,
-    has lat,
-    has lon;
+  has name,
+  has lat,
+  has lon;
 
 
 route sub relationship,
 	# a <route> has a <section> in the form of a <route-section>
 	relates section, # is <section> too vague?
-	# a <route> has a <stop> in the form of a <station>	
+	# a <route> has a <stop> in the form of a <station>
 	relates stop,
 
 	# a <route> has a <origin> as a <stop> in the form of a <station>
@@ -40,13 +40,13 @@ route sub relationship,
 	relates destination as stop,
 
 	# a <route> has a <service/operator/agent/handler/service-provider/provider/facilitator/enabler/route-line> in the form of a <line>
-	# why route-line or route-operator and not something else? Because the other terms are vague, and could describe a 
+	# why route-line or route-operator and not something else? Because the other terms are vague, and could describe a
 	# lot of other roles, whereas route-line substitutes for where we cannot find a name, but can generate something specific
-	
+
 	# a West Ruislip to Epping route has a <route-line/route-operator> in the form of the Central Line
 	relates route-operator,
 
-    plays leg-route;
+  plays leg-route;
 
 
 route-section sub entity,
@@ -93,33 +93,32 @@ neighbourship sub relationship,
 
 
 journey-leg sub relationship,
-    relates start,
-    relates finish,
-    relates leg-route;
+  relates start,
+  relates finish,
+  relates leg-route;
 
 
 find-journey-leg sub rule,
-    when {
-        $s1 isa station;
-        $s2 isa station;
-        $rs isa route-section;
-        $t1(beginning: $s1, end: $s2, service: $rs) isa tunnel;
-        $r(section: $rs) isa route;
-    } then {
-        (start: $s1, finish: $s2, leg-route: $r) isa journey-leg;
-    };
+  when {
+      $s1 isa station;
+      $s2 isa station;
+      $rs isa route-section;
+      $t1(beginning: $s1, end: $s2, service: $rs) isa tunnel;
+      $r(section: $rs) isa route;
+  } then {
+      (start: $s1, finish: $s2, leg-route: $r) isa journey-leg;
+  };
 
 
 find-journey-leg-transitive sub rule,
-    when {
-        $s1 isa station;
-        $s2 isa station;
-        $s3 isa station;
-        $r isa route;
-        (start: $s1, finish: $s2, leg-route: $r) isa journey-leg;
-        (start: $s2, finish: $s3, leg-route: $r) isa journey-leg;
-    } then {
-        (start: $s1, finish: $s3, leg-route: $r) isa journey-leg;
-        # When we can do arithmetic then we'll be able to add up the time taken also
-    };
-
+  when {
+      $s1 isa station;
+      $s2 isa station;
+      $s3 isa station;
+      $r isa route;
+      (start: $s1, finish: $s2, leg-route: $r) isa journey-leg;
+      (start: $s2, finish: $s3, leg-route: $r) isa journey-leg;
+  } then {
+      (start: $s1, finish: $s3, leg-route: $r) isa journey-leg;
+      # When we can do arithmetic then we'll be able to add up the time taken also
+  };
