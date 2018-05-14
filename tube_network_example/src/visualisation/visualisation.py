@@ -105,8 +105,8 @@ class TubeGui:
 
     THAMES_WIDTH = 10
 
-    ZOOM_IN_SCALE = 1.25
-    ZOOM_OUT_SCALE = 1/1.1
+    ZOOM_IN_SCALE = 2
+    ZOOM_OUT_SCALE = 1/ZOOM_IN_SCALE
 
     STATION_FONT_SIZE = 6
     STATION_CIRCLE_RADIUS = 1
@@ -263,7 +263,7 @@ class TubeGui:
         self._scale = 1
         self._shortest_path_stations = []
         self._shortest_path_elements = []
-        self._scan_delta = None
+        self._scan_delta = (0, 0)
         # self.x_pos = int(self.w / 2)
         # self.y_pos = int(self.h / 2)
         self.x_pos = 0
@@ -282,21 +282,16 @@ class TubeGui:
 
     def scan_move(self, event):
         self.canvas.scan_dragto(event.x, event.y, gain=1)
-        # self.x_pos = event.x
-        # self.y_pos = event.y
         # print("scan_move {}, {}".format(event.x, event.y))
         # print("scan_move: canvas {}, {}".format(self.canvas.canvasx(event.x), self.canvas.canvasy(event.y)))
 
-        # self._scan_delta = event.x - self.canvas.canvasx(event.x), event.y - self.canvas.canvasy(event.y)
-        # self._scan_delta = self._scan_start_pos - event.x, self._scan_start_pos - event.y
-        # self._scan_delta = self.transform_to_current_scale(event.x - self._scan_start_pos[0]), self.transform_to_current_scale(event.y - self._scan_start_pos[1])
         self._scan_delta = event.x - self._scan_start_pos[0], event.y - self._scan_start_pos[1]
         print("scan delta: {}".format(self._scan_delta))
 
     def scan_stop(self, event):
         self.x_pos += self._scan_delta[0]
         self.y_pos += self._scan_delta[1]
-        self._scan_delta = None
+        self._scan_delta = (0, 0)
         print("New pos: {}, {}".format(self.x_pos, self.y_pos))
 
     def key_handler(self, event):
@@ -379,77 +374,28 @@ class TubeGui:
         else:
             raise ValueError("Call to zoom didn't specify a valid direction")
 
-        # This is the point on the CANVAS to zoom on, not the window
-        scale_centre = -self.x_pos + self.w/(2 * self._scale), -self.y_pos + self.h/(2 * self._scale)
-        # self.canvas.scale('all', *scale_centre, scaling, scaling)
+        # First, scale up the canvas about its origin. Doing this about the canvas origin keeps adding other elements
+        # to the canvas simple, because then only scaling needs to be applied
         self.canvas.scale('all', 0, 0, scaling, scaling)
-        # self._scale *= scaling
-        """
-        Window width w
-        Window height h
-        Current position panned to: pos_x, pos_y, consider first 0, 0
-        We're interested in how the centre of the screen moves, which goes from w/2 to (w/2)/scaling = (w/2) * (1 - 1 / scaling)
-        We're interested in how the centre of the screen moves, which goes from w/2 to (w/2)/scaling = (w/2) * (1 - 1 / scaling)
-        """
-        # factor = -(1/2) * (1 - 1 / scaling)
-        # factor = (1/2) * (1/scaling - 1)
-        self.canvas.scan_mark(0, 0)
-        # self.canvas.scan_dragto(int(self.transform_to_current_scale(self.w) * factor),
-        #                         int(self.transform_to_current_scale(self.h) * factor), gain=1)
 
-        # self.canvas.scan_dragto(int(self.transform_to_current_scale(self.w) * factor - self.transform_to_current_scale(self.x_pos)),
-        #                         int(self.transform_to_current_scale(self.h) * factor - self.transform_to_current_scale(self.y_pos)), gain=1)
-        # self.canvas.scan_dragto(int(self.transform_to_current_scale(self.w) * factor + self.transform_to_current_scale(self.x_pos)),
-        #                         int(self.transform_to_current_scale(self.h) * factor + self.transform_to_current_scale(self.y_pos)), gain=1)
-        # self.canvas.scan_dragto(int(self.transform_to_current_scale(self.w) * factor + self.x_pos),
-        #                         int(self.transform_to_current_scale(self.h) * factor + self.y_pos), gain=1)
-        # self.canvas.scan_dragto(int((self.transform_to_current_scale(self.w - self.x_pos)) * factor),
-        #                         int((self.transform_to_current_scale(self.h - self.y_pos)) * factor), gain=1)
-
-        # hb = self.y_pos + scaling * self.transform_to_current_scale(self.h / 2 - self.y_pos)
-        # wb = self.x_pos + scaling * self.transform_to_current_scale(self.w / 2 - self.x_pos)
-
-        # hb = self.transform_to_current_scale(self.h) / 2 - (1 / scaling) * self.transform_to_current_scale((self.h) / 2 - self.y_pos)
-        # wb = self.transform_to_current_scale(self.w) / 2 - (1 / scaling) * self.transform_to_current_scale((self.w) / 2 - self.x_pos)
-
-
-        # hb = int(self.transform_to_current_scale(self.w - self.x_pos) * factor)
-        # wb = int(self.transform_to_current_scale(self.h - self.y_pos) * factor)
-
-        # hb = int(self.transform_to_current_scale(self.w - self.x_pos) * factor)
-        # wb = int(self.transform_to_current_scale(self.h - self.y_pos) * factor)
-
-
-        # hb = int(self.transform_to_current_scale(self.w) * factor) - self.x_pos
-        # wb = int(self.transform_to_current_scale(self.h) * factor) - self.y_pos
-        # wb = self.transform_to_current_scale(self.w) * factor
-        # hb = self.transform_to_current_scale(self.h) * factor
-
-
-        factor = (1/2) * (1/scaling - 1)
-        wb = self.w / self._scale * factor
-        hb = self.h / self._scale * factor
+        # Update the persistent scale value
         self._scale *= scaling
 
+        # Find the displacement to shift the canvas by, so that is appears to scale about the centre-point of the window
+        dx = -int((1 - scaling) * (self.x_pos - self.w / 2))
+        dy = -int((1 - scaling) * (self.y_pos - self.h / 2))
 
-        print("wb, hb: {}, {}".format(wb, hb))
+        # Since we're shifting by this amount, also add this displacement to the persistent scan variables
+        self.x_pos += dx
+        self.y_pos += dy
 
-        # wb = int(wb - self.x_pos/2)
-        # hb = int(hb - self.y_pos/2)
-        self.x_pos += wb
-        self.y_pos += hb
-        # wb = int(wb)
-        # hb = int(hb)
+        # Set an anchor to drag from. I believe this point is arbitrary
+        self.canvas.scan_mark(0, 0)
 
-        # self.canvas.scan_dragto(wb, hb, gain=1)
-        # self.canvas.scan_dragto(int(self.canvas.canvasx(self.x_pos)), int(self.canvas.canvasx(self.y_pos)), gain=1)
-        # self.canvas.scan_dragto(int(self.x_pos), int(self.y_pos), gain=1)
-        # self.canvas.scan_dragto(int(wb), int(hb), gain=1)
-        # self.x_pos -= wb
-        # self.y_pos -= hb
-        # self.x_pos += wb
-        # self.y_pos += hb
-        print("zoom reset scan position to {}, {}".format(int(self.x_pos), int(self.y_pos)))
+        # The canvas is being scaled about its origin, so we only need to drag the delta to centre the scaling
+        self.canvas.scan_dragto(dx, dy, gain=1)
+
+        print("zoom set scan position to {}, {}".format(int(self.x_pos), int(self.y_pos)))
 
     def transform_to_current_scale(self, val):
         return val * self._scale
