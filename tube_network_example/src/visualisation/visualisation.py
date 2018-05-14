@@ -268,6 +268,7 @@ class TubeGui:
         # self.y_pos = int(self.h / 2)
         self.x_pos = 0
         self.y_pos = 0
+        self._scanning = False
 
     def perform_query(self, graql_string):
         print(graql_string)
@@ -278,6 +279,7 @@ class TubeGui:
     def scan_start(self, event):
         self.canvas.scan_mark(event.x, event.y)
         self._scan_start_pos = event.x, event.y
+        self._scanning = True
         # print("scan_start {}, {}".format(event.x, event.y))
 
     def scan_move(self, event):
@@ -292,6 +294,7 @@ class TubeGui:
         self.x_pos += self._scan_delta[0]
         self.y_pos += self._scan_delta[1]
         self._scan_delta = (0, 0)
+        self._scanning = False
         print("New pos: {}, {}".format(self.x_pos, self.y_pos))
 
     def key_handler(self, event):
@@ -367,35 +370,38 @@ class TubeGui:
         self._shortest_path_stations = []
 
     def zoom(self, direction):
-        if direction == "in":
-            scaling = self.ZOOM_IN_SCALE
-        elif direction == "out":
-            scaling = self.ZOOM_OUT_SCALE
+        if self._scanning:
+            print("Currently scanning. Stop scanning to zoom.")
         else:
-            raise ValueError("Call to zoom didn't specify a valid direction")
+            if direction == "in":
+                scaling = self.ZOOM_IN_SCALE
+            elif direction == "out":
+                scaling = self.ZOOM_OUT_SCALE
+            else:
+                raise ValueError("Call to zoom didn't specify a valid direction")
 
-        # First, scale up the canvas about its origin. Doing this about the canvas origin keeps adding other elements
-        # to the canvas simple, because then only scaling needs to be applied
-        self.canvas.scale('all', 0, 0, scaling, scaling)
+            # First, scale up the canvas about its origin. Doing this about the canvas origin keeps adding other elements
+            # to the canvas simple, because then only scaling needs to be applied
+            self.canvas.scale('all', 0, 0, scaling, scaling)
 
-        # Update the persistent scale value
-        self._scale *= scaling
+            # Update the persistent scale value
+            self._scale *= scaling
 
-        # Find the displacement to shift the canvas by, so that is appears to scale about the centre-point of the window
-        dx = -int((1 - scaling) * (self.x_pos - self.w / 2))
-        dy = -int((1 - scaling) * (self.y_pos - self.h / 2))
+            # Find the displacement to shift the canvas by, so that is appears to scale about the centre-point of the window
+            dx = -int((1 - scaling) * (self.x_pos - self.w / 2))
+            dy = -int((1 - scaling) * (self.y_pos - self.h / 2))
 
-        # Since we're shifting by this amount, also add this displacement to the persistent scan variables
-        self.x_pos += dx
-        self.y_pos += dy
+            # Since we're shifting by this amount, also add this displacement to the persistent scan variables
+            self.x_pos += dx
+            self.y_pos += dy
 
-        # Set an anchor to drag from. I believe this point is arbitrary
-        self.canvas.scan_mark(0, 0)
+            # Set an anchor to drag from. I believe this point is arbitrary
+            self.canvas.scan_mark(0, 0)
 
-        # The canvas is being scaled about its origin, so we only need to drag the delta to centre the scaling
-        self.canvas.scan_dragto(dx, dy, gain=1)
+            # The canvas is being scaled about its origin, so we only need to drag the delta to centre the scaling
+            self.canvas.scan_dragto(dx, dy, gain=1)
 
-        print("zoom set scan position to {}, {}".format(int(self.x_pos), int(self.y_pos)))
+            print("zoom set scan position to {}, {}".format(int(self.x_pos), int(self.y_pos)))
 
     def transform_to_current_scale(self, val):
         return val * self._scale
