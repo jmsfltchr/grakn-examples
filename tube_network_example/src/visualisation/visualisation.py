@@ -105,7 +105,7 @@ class TubeGui:
 
     THAMES_WIDTH = 10
 
-    ZOOM_IN_SCALE = 1.1
+    ZOOM_IN_SCALE = 1.25
     ZOOM_OUT_SCALE = 1/1.1
 
     STATION_FONT_SIZE = 6
@@ -130,8 +130,8 @@ class TubeGui:
         self.root = root
         self.grakn_client = grakn_client
         self.w, self.h = self.root.winfo_screenwidth(), self.root.winfo_screenheight()
-        self.x_pos = int(self.w / 2)
-        self.y_pos = int(self.h / 2)
+        # self.x_pos = int(self.w / 2)
+        # self.y_pos = int(self.h / 2)
         self.root.geometry("%dx%d+0+0" % (self.w, self.h))
         self.root.focus_set()
         self.root.bind("<Escape>", lambda e: e.widget.quit())
@@ -139,8 +139,9 @@ class TubeGui:
         self.root.title('London Tube Map')
 
         self.canvas = tk.Canvas(self.root)
-        self.canvas.bind("<ButtonPress-1>", self.scroll_start)
-        self.canvas.bind("<B1-Motion>", self.scroll_move)
+        self.canvas.bind("<ButtonPress-1>", self.scan_start)
+        self.canvas.bind("<ButtonRelease-1>", self.scan_stop)
+        self.canvas.bind("<B1-Motion>", self.scan_move)
         self.canvas.pack(fill=tk.BOTH, expand=1)  # Stretch canvas to root window size.
 
         # We want to scale the longitude and latitude to fit the image
@@ -262,6 +263,11 @@ class TubeGui:
         self._scale = 1
         self._shortest_path_stations = []
         self._shortest_path_elements = []
+        self._scan_delta = None
+        # self.x_pos = int(self.w / 2)
+        # self.y_pos = int(self.h / 2)
+        self.x_pos = 0
+        self.y_pos = 0
 
     def perform_query(self, graql_string):
         print(graql_string)
@@ -269,16 +275,29 @@ class TubeGui:
         response = self.grakn_client.execute(graql_string)
         return response
 
-    def scroll_start(self, event):
+    def scan_start(self, event):
         self.canvas.scan_mark(event.x, event.y)
-        # print("scroll_start {}, {}".format(event.x, event.y))
+        self._scan_start_pos = event.x, event.y
+        # print("scan_start {}, {}".format(event.x, event.y))
 
-    def scroll_move(self, event):
+    def scan_move(self, event):
         self.canvas.scan_dragto(event.x, event.y, gain=1)
-        self.x_pos = event.x
-        self.y_pos = event.y
-        print("scroll_move {}, {}".format(event.x, event.y))
-        print("scroll_move: canvas {}, {}".format(self.canvas.canvasx(event.x), self.canvas.canvasy(event.y)))
+        # self.x_pos = event.x
+        # self.y_pos = event.y
+        # print("scan_move {}, {}".format(event.x, event.y))
+        # print("scan_move: canvas {}, {}".format(self.canvas.canvasx(event.x), self.canvas.canvasy(event.y)))
+
+        # self._scan_delta = event.x - self.canvas.canvasx(event.x), event.y - self.canvas.canvasy(event.y)
+        # self._scan_delta = self._scan_start_pos - event.x, self._scan_start_pos - event.y
+        # self._scan_delta = self.transform_to_current_scale(event.x - self._scan_start_pos[0]), self.transform_to_current_scale(event.y - self._scan_start_pos[1])
+        self._scan_delta = event.x - self._scan_start_pos[0], event.y - self._scan_start_pos[1]
+        print("scan delta: {}".format(self._scan_delta))
+
+    def scan_stop(self, event):
+        self.x_pos += self._scan_delta[0]
+        self.y_pos += self._scan_delta[1]
+        self._scan_delta = None
+        print("New pos: {}, {}".format(self.x_pos, self.y_pos))
 
     def key_handler(self, event):
         print(event.char)
@@ -360,18 +379,77 @@ class TubeGui:
         else:
             raise ValueError("Call to zoom didn't specify a valid direction")
 
+        # This is the point on the CANVAS to zoom on, not the window
+        scale_centre = -self.x_pos + self.w/(2 * self._scale), -self.y_pos + self.h/(2 * self._scale)
+        # self.canvas.scale('all', *scale_centre, scaling, scaling)
         self.canvas.scale('all', 0, 0, scaling, scaling)
-        self._scale *= scaling
+        # self._scale *= scaling
         """
         Window width w
         Window height h
         Current position panned to: pos_x, pos_y, consider first 0, 0
         We're interested in how the centre of the screen moves, which goes from w/2 to (w/2)/scaling = (w/2) * (1 - 1 / scaling)
+        We're interested in how the centre of the screen moves, which goes from w/2 to (w/2)/scaling = (w/2) * (1 - 1 / scaling)
         """
-        factor = -(1/2) * (1 - 1 / scaling)
+        # factor = -(1/2) * (1 - 1 / scaling)
+        # factor = (1/2) * (1/scaling - 1)
         self.canvas.scan_mark(0, 0)
-        self.canvas.scan_dragto(int(self.transform_to_current_scale(self.w) * factor),
-                                int(self.transform_to_current_scale(self.h) * factor), gain=1)
+        # self.canvas.scan_dragto(int(self.transform_to_current_scale(self.w) * factor),
+        #                         int(self.transform_to_current_scale(self.h) * factor), gain=1)
+
+        # self.canvas.scan_dragto(int(self.transform_to_current_scale(self.w) * factor - self.transform_to_current_scale(self.x_pos)),
+        #                         int(self.transform_to_current_scale(self.h) * factor - self.transform_to_current_scale(self.y_pos)), gain=1)
+        # self.canvas.scan_dragto(int(self.transform_to_current_scale(self.w) * factor + self.transform_to_current_scale(self.x_pos)),
+        #                         int(self.transform_to_current_scale(self.h) * factor + self.transform_to_current_scale(self.y_pos)), gain=1)
+        # self.canvas.scan_dragto(int(self.transform_to_current_scale(self.w) * factor + self.x_pos),
+        #                         int(self.transform_to_current_scale(self.h) * factor + self.y_pos), gain=1)
+        # self.canvas.scan_dragto(int((self.transform_to_current_scale(self.w - self.x_pos)) * factor),
+        #                         int((self.transform_to_current_scale(self.h - self.y_pos)) * factor), gain=1)
+
+        # hb = self.y_pos + scaling * self.transform_to_current_scale(self.h / 2 - self.y_pos)
+        # wb = self.x_pos + scaling * self.transform_to_current_scale(self.w / 2 - self.x_pos)
+
+        # hb = self.transform_to_current_scale(self.h) / 2 - (1 / scaling) * self.transform_to_current_scale((self.h) / 2 - self.y_pos)
+        # wb = self.transform_to_current_scale(self.w) / 2 - (1 / scaling) * self.transform_to_current_scale((self.w) / 2 - self.x_pos)
+
+
+        # hb = int(self.transform_to_current_scale(self.w - self.x_pos) * factor)
+        # wb = int(self.transform_to_current_scale(self.h - self.y_pos) * factor)
+
+        # hb = int(self.transform_to_current_scale(self.w - self.x_pos) * factor)
+        # wb = int(self.transform_to_current_scale(self.h - self.y_pos) * factor)
+
+
+        # hb = int(self.transform_to_current_scale(self.w) * factor) - self.x_pos
+        # wb = int(self.transform_to_current_scale(self.h) * factor) - self.y_pos
+        # wb = self.transform_to_current_scale(self.w) * factor
+        # hb = self.transform_to_current_scale(self.h) * factor
+
+
+        factor = (1/2) * (1/scaling - 1)
+        wb = self.w / self._scale * factor
+        hb = self.h / self._scale * factor
+        self._scale *= scaling
+
+
+        print("wb, hb: {}, {}".format(wb, hb))
+
+        # wb = int(wb - self.x_pos/2)
+        # hb = int(hb - self.y_pos/2)
+        self.x_pos += wb
+        self.y_pos += hb
+        # wb = int(wb)
+        # hb = int(hb)
+
+        # self.canvas.scan_dragto(wb, hb, gain=1)
+        # self.canvas.scan_dragto(int(self.canvas.canvasx(self.x_pos)), int(self.canvas.canvasx(self.y_pos)), gain=1)
+        # self.canvas.scan_dragto(int(self.x_pos), int(self.y_pos), gain=1)
+        # self.canvas.scan_dragto(int(wb), int(hb), gain=1)
+        # self.x_pos -= wb
+        # self.y_pos -= hb
+        # self.x_pos += wb
+        # self.y_pos += hb
+        print("zoom reset scan position to {}, {}".format(int(self.x_pos), int(self.y_pos)))
 
     def transform_to_current_scale(self, val):
         return val * self._scale
@@ -414,6 +492,7 @@ class TubeGui:
 
 
 if __name__ == "__main__":
+    # TODO Add Grakn logo to the top corner
 
     grakn_client = grakn.Client(uri=settings.uri, keyspace=settings.keyspace)
     root = tk.Tk()
