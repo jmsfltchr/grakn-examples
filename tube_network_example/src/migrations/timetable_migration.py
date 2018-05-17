@@ -1,3 +1,17 @@
+# Copyright 2018 Grakn Labs Ltd
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 import json
 import grakn
 import datetime as dt
@@ -8,7 +22,9 @@ from utils.utils import check_response_length, match_get, insert, match_insert, 
 
 def import_query_generator(perform_query, timetables_dir_path):
     """
-    Builds the Grakl statements required to import the transportation data contained in all_routes.json
+    Builds the Graql statements required to import the transportation data contained in all_routes.json
+    :param perform_query: function to call to query the grakn server
+    :param timetables_dir_path: path to
     :return:
     """
 
@@ -44,19 +60,6 @@ def import_query_generator(perform_query, timetables_dir_path):
 
                 if len(response) < 1:
                     # Only proceed if there is this station isn't already in the database
-
-                    # Check that the station isn't duplicated, or skip this if instead we only do it once per tube-line.
-                    # - Actually there will be duplication doing it per tube, since stations belong to more than one
-                    # tube-line
-
-                    # station_insert_query = (station_query.format(station["id"]) +
-                    #                         "$s1 has name \"{}\", "
-                    #                         "has lat {}, has lon {};\n"
-                    #                         "$z(contained-station: $s1)").format(station["id"],
-                    #                                                              station["name"],
-                    #                                                              station["lat"],
-                    #                                                              station["lon"],
-                    #                                                              )
                     station_insert_query = (station_query.format(station["id"]) +
                                             "$s1 has name \"{}\", "
                                             "has lat {}, has lon {};\n").format(station["name"],
@@ -147,7 +150,7 @@ def import_query_generator(perform_query, timetables_dir_path):
 
 
 def make_queries(timetables_dir_path, keyspace, uri=settings.uri,
-                 log_file="logs/graql_output_{}.txt".format(dt.datetime.now()), send_queries=True):
+                 log_file="logs/graql_output_{}.txt".format(dt.datetime.now())):
     client = grakn.Client(uri=uri, keyspace=keyspace)
 
     start_time = dt.datetime.now()
@@ -158,17 +161,13 @@ def make_queries(timetables_dir_path, keyspace, uri=settings.uri,
             print(graql_string)
             print("---")
             graql_output.write(graql_string)
-            if send_queries:
-                # Send the graql query to the server
-                response = client.execute(graql_string)
-                graql_output.write("\n--response:\n" + str(response))
-                graql_output.write("\n{} insertions made \n ----- \n".format(len(response)))
-                return response
-            else:
-                return [{"id": "<DUMMY_ID>"},]
+            # Send the graql query to the server
+            response = client.execute(graql_string)
+            graql_output.write("\n--response:\n" + str(response))
+            graql_output.write("\n{} insertions made \n ----- \n".format(len(response)))
+            return response
 
         import_query_generator(query_function, timetables_dir_path)
-
 
         end_time = dt.datetime.now()
         time_taken = end_time - start_time
@@ -179,5 +178,4 @@ def make_queries(timetables_dir_path, keyspace, uri=settings.uri,
 
 if __name__ == "__main__":
 
-    go = True
-    make_queries(settings.timetables_path, settings.keyspace, send_queries=go)
+    make_queries(settings.timetables_path, settings.keyspace)

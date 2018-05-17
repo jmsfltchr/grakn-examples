@@ -1,3 +1,17 @@
+# Copyright 2018 Grakn Labs Ltd
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 import tkinter as tk
 import grakn
 import tube_network_example.settings as settings
@@ -45,7 +59,7 @@ def _create_circle(self, x, y, r, **kwargs):
     return self.create_oval(x-r, y-r, x+r, y+r, **kwargs)
 
 
-# Add the circle helper function to tkinter so that we can use it more naturally
+# Attach the circle helper function to tkinter so that we can use it more naturally
 tk.Canvas.create_circle = _create_circle
 
 
@@ -334,8 +348,12 @@ class TubeGui:
         """
         print(graql_string)
         # Send the graql query to the server
-        response = self.grakn_client.execute(graql_string)
-        print("...query complete")
+        try:
+            response = self.grakn_client.execute(graql_string)
+        except:
+            print("Ensure that Grakn server is running before attempting to start the visualisation")
+        else:
+            print("...query complete")
         return response
 
     def _scan_start(self, event):

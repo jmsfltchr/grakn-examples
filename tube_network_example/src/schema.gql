@@ -1,5 +1,19 @@
+# Copyright 2018 Grakn Labs Ltd
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 
-# a <relationship> has a <role> in the form of a <subject> (<subject> is a concept, which could be an entity, relationship, or attribute)
+# Try using this sentence to formulate the structure of a relationship:
+# A <relationship> has a <role> in the form of a <subject> (<subject> is a concept, which could be an entity, relationship, or attribute)
 
 define
 
@@ -12,19 +26,19 @@ distance sub attribute datatype double;
 
 
 station sub entity,
-	plays stop,
+    plays stop,
 	plays beginning,
 	plays end,
-  plays start,
-  plays finish,
-  plays origin,
-  plays destination,
+    plays start,
+    plays finish,
+    plays origin,
+    plays destination,
 	plays contained-station,
 	plays neighbour,
 	has naptan-id,
-  has name,
-  has lat,
-  has lon;
+    has name,
+    has lat,
+    has lon;
 
 
 route sub relationship,
@@ -46,7 +60,7 @@ route sub relationship,
 	# a West Ruislip to Epping route has a <route-line/route-operator> in the form of the Central Line
 	relates route-operator,
 
-  plays leg-route;
+    plays leg-route;
 
 
 route-section sub entity,
@@ -93,32 +107,32 @@ neighbourship sub relationship,
 
 
 journey-leg sub relationship,
-  relates start,
-  relates finish,
-  relates leg-route;
+    relates start,
+    relates finish,
+    relates leg-route;
 
 
 find-journey-leg sub rule,
-  when {
-      $s1 isa station;
-      $s2 isa station;
-      $rs isa route-section;
-      $t1(beginning: $s1, end: $s2, service: $rs) isa tunnel;
-      $r(section: $rs) isa route;
-  } then {
-      (start: $s1, finish: $s2, leg-route: $r) isa journey-leg;
-  };
+    when {
+        $s1 isa station;
+        $s2 isa station;
+        $rs isa route-section;
+        $t1(beginning: $s1, end: $s2, service: $rs) isa tunnel;
+        $r(section: $rs) isa route;
+    } then {
+        (start: $s1, finish: $s2, leg-route: $r) isa journey-leg;
+    };
 
 
 find-journey-leg-transitive sub rule,
-  when {
-      $s1 isa station;
-      $s2 isa station;
-      $s3 isa station;
-      $r isa route;
-      (start: $s1, finish: $s2, leg-route: $r) isa journey-leg;
-      (start: $s2, finish: $s3, leg-route: $r) isa journey-leg;
-  } then {
-      (start: $s1, finish: $s3, leg-route: $r) isa journey-leg;
-      # When we can do arithmetic then we'll be able to add up the time taken also
-  };
+    when {
+        $s1 isa station;
+        $s2 isa station;
+        $s3 isa station;
+        $r isa route;
+        (start: $s1, finish: $s2, leg-route: $r) isa journey-leg;
+        (start: $s2, finish: $s3, leg-route: $r) isa journey-leg;
+    } then {
+        (start: $s1, finish: $s3, leg-route: $r) isa journey-leg;
+        # When we can do arithmetic then we'll be able to add up the time taken also
+    };
