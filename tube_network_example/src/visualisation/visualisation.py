@@ -43,6 +43,7 @@ class TubeGui:
         "Waterloo & City": "#95CDBA",
     }
 
+    # Grid coordinates of a path along the centreline of the River Thames
     THAMES_WAYPOINTS = (
                         (51.388592, -0.426814),
                         (51.404487, -0.409858),
@@ -108,7 +109,7 @@ class TubeGui:
     ZOOM_IN_SCALE = 2
     ZOOM_OUT_SCALE = 1/ZOOM_IN_SCALE
 
-    STATION_FONT_SIZE = 6
+    STATION_FONT_SIZE = 8
     STATION_CIRCLE_RADIUS = 1
 
     STATION_K_CORE_COLOUR = "#AAF"
@@ -123,6 +124,7 @@ class TubeGui:
     TUNNEL_SHORTEST_PATH_COLOUR = "#DDD"
     TUNNEL_SHORTEST_PATH_WIDTH = 10
 
+    # Properties of the station connections drawn
     LINE_WIDTH = 2
     LINE_SPACING = 0.5
 
@@ -130,8 +132,6 @@ class TubeGui:
         self.root = root
         self.grakn_client = grakn_client
         self.w, self.h = self.root.winfo_screenwidth(), self.root.winfo_screenheight()
-        # self.x_pos = int(self.w / 2)
-        # self.y_pos = int(self.h / 2)
         self.root.geometry("%dx%d+0+0" % (self.w, self.h))
         self.root.focus_set()
         self.root.bind("<Escape>", lambda e: e.widget.quit())
@@ -148,12 +148,10 @@ class TubeGui:
         # To do this we need the minimum and maximum of the longitude and latitude, we can query for this easily!
         compute_coords_limits = "compute {} of {}, in station;"
 
-        # min_lat = self.perform_query(compute_coords_limits.format("min", "lat"))
-        # max_lat = self.perform_query(compute_coords_limits.format("max", "lat"))
-        # min_lon = self.perform_query(compute_coords_limits.format("min", "lon"))
-        # max_lon = self.perform_query(compute_coords_limits.format("max", "lon"))
-
-        min_lat, max_lat, min_lon, max_lon = 51.402142, 51.705208, -0.611247, 0.250882
+        min_lat = self.perform_query(compute_coords_limits.format("min", "lat"))
+        max_lat = self.perform_query(compute_coords_limits.format("max", "lat"))
+        min_lon = self.perform_query(compute_coords_limits.format("min", "lon"))
+        max_lon = self.perform_query(compute_coords_limits.format("max", "lon"))
 
         # aspect ratio as width over height, which is longitude over latitude
         aspect_ratio = (max_lon - min_lon) / (max_lat - min_lat)
@@ -210,20 +208,21 @@ class TubeGui:
                 dx2 = grad * dy2
 
                 self.canvas.create_line(lon1 - (i * dx2), lat1 + (i * dy2), lon2 - (i * dx2), lat2 + (i * dy2),
-                                        # arrow=tk.LAST, arrowshape=(5, 5, 3),  # Let's make an option to show arrows later
                                         fill=self.TUBE_LINE_COLOURS[tube_line_name],
                                         width=self.LINE_WIDTH)
-            # if t > 10:
-            #     break
 
         # ===== DRAW STATIONS =====
+
+        # We need to associate the id of the station entity in Grakn to the rendered dot on the screen, so that we can
+        # find the Grakn id of a station that is clicked on
         self.station_point_ids = dict()
+        # Also store the station coords so that we don't have to query Grakn for them again
         self.station_canvas_coords = dict()
         self.station_centrality_points = dict()
         station_name_labels = dict()
         suffix = " Underground Station"
 
-        station_query = match_get("$s isa station, has name $name, has lon $lon, has lat $lat;")
+        station_query = match_get("$s isa station, has name $name, has lon $lon, has lat $lat; ($s) isa tunnel;")
         response = self.perform_query(station_query)
         print("...query complete")
         for match in response:
@@ -242,7 +241,7 @@ class TubeGui:
                                                                   fill="white", outline="black")
             self.station_point_ids[station_id] = station_tag
 
-            l = lambda event, widget=station_tag, id=station_id: self.on_station_click(event, widget, id)
+            l = lambda event, id=station_id: self.on_station_click(event, id)
 
             event_sequence = "<Shift-ButtonPress-1>"
 
@@ -264,8 +263,6 @@ class TubeGui:
         self._shortest_path_stations = []
         self._shortest_path_elements = []
         self._scan_delta = (0, 0)
-        # self.x_pos = int(self.w / 2)
-        # self.y_pos = int(self.h / 2)
         self.x_pos = 0
         self.y_pos = 0
         self._scanning = False
@@ -280,12 +277,9 @@ class TubeGui:
         self.canvas.scan_mark(event.x, event.y)
         self._scan_start_pos = event.x, event.y
         self._scanning = True
-        # print("scan_start {}, {}".format(event.x, event.y))
 
     def scan_move(self, event):
         self.canvas.scan_dragto(event.x, event.y, gain=1)
-        # print("scan_move {}, {}".format(event.x, event.y))
-        # print("scan_move: canvas {}, {}".format(self.canvas.canvasx(event.x), self.canvas.canvasy(event.y)))
 
         self._scan_delta = event.x - self._scan_start_pos[0], event.y - self._scan_start_pos[1]
         print("scan delta: {}".format(self._scan_delta))
@@ -317,7 +311,7 @@ class TubeGui:
         elif event.char == "q":
             self.clear_shortest_path()
 
-    def on_station_click(self, event, widget, station_id):
+    def on_station_click(self, event, station_id):
         self._shortest_path_stations.append(station_id)
 
         x, y = self.get_station_point_coords(station_id)
@@ -380,14 +374,15 @@ class TubeGui:
             else:
                 raise ValueError("Call to zoom didn't specify a valid direction")
 
-            # First, scale up the canvas about its origin. Doing this about the canvas origin keeps adding other elements
-            # to the canvas simple, because then only scaling needs to be applied
+            # First, scale up the canvas about its origin. Doing this about the canvas origin keeps adding other
+            # elements to the canvas simple, because then only scaling needs to be applied
             self.canvas.scale('all', 0, 0, scaling, scaling)
 
             # Update the persistent scale value
             self._scale *= scaling
 
-            # Find the displacement to shift the canvas by, so that is appears to scale about the centre-point of the window
+            # Find the displacement to shift the canvas by, so that is appears to scale about the centre-point of the
+            # window
             dx = -int((1 - scaling) * (self.x_pos - self.w / 2))
             dy = -int((1 - scaling) * (self.y_pos - self.h / 2))
 
@@ -406,9 +401,6 @@ class TubeGui:
     def transform_to_current_scale(self, val):
         return val * self._scale
 
-    def show_zones(self):
-        pass
-
     def display_centrality(self, query, upper_radius, colour):
         if not self._displaying_centrality:
             centrality = self.perform_query(query)
@@ -421,13 +413,9 @@ class TubeGui:
                     station_element_id = self.station_point_ids[concept_id]
                     lon, lat = self.station_canvas_coords[concept_id]
 
-                    # TODO Need to fix the relative coordinate systems, after zooming and panning these elements are
-                    # TODO added incorrectly
-                    # TODO This doesn't help, but it's the right track
                     lon = self.transform_to_current_scale(lon)
                     lat = self.transform_to_current_scale(lat)
 
-                    # radius = self.transform_to_current_scale(base_radius * int(score))
                     radius = self.transform_to_current_scale((int(score) / max_score) * upper_radius)
 
                     centrality_element_id = self.canvas.create_circle(lon, lat,
@@ -444,8 +432,6 @@ class TubeGui:
 
 
 if __name__ == "__main__":
-    # TODO Add Grakn logo to the top corner
-
     grakn_client = grakn.Client(uri=settings.uri, keyspace=settings.keyspace)
     root = tk.Tk()
 

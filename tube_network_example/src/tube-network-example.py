@@ -40,11 +40,9 @@ compute path from "V1880232" to "V1044704" in stop, route-section, route;
 === LINES PASSING THROUGH STOP ===
 To be run in the dashboard console
 match 
-$s isa stop has name "Green Park Underground Station";
-$r isa route;
-$rs($r, $s) isa route-section;
-$l isa line, has name $line-name;
-($l, $r) isa operation;
+$s isa station has name "Green Park Underground Station";
+$l isa tube-line, has name $line-name;
+(route-operator: $l, stop: $s) isa route;
 get $line-name;
 
 

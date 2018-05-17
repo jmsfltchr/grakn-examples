@@ -17,4 +17,4 @@ lines = ["bakerloo",
          "waterloo-city"]
 
 uri = 'http://localhost:4567'
-keyspace = "tube_example_3"
+keyspace = "tube_example_spooky"
