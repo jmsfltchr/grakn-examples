@@ -18,6 +18,7 @@ import datetime as dt
 import os
 import tube_network_example.settings as settings
 from utils.utils import check_response_length, match_get, insert, match_insert, get_match_id
+import pathlib
 
 
 def import_query_generator(perform_query, timetables_dir_path):
@@ -150,7 +151,10 @@ def import_query_generator(perform_query, timetables_dir_path):
 
 
 def make_queries(timetables_dir_path, keyspace, uri=settings.uri,
-                 log_file="logs/graql_output_{}.txt".format(dt.datetime.now())):
+                 log_file=settings.migration_logs_path + "graql_output_{}.txt".format(dt.datetime.now())):
+
+    pathlib.Path(settings.migration_logs_path).mkdir(exist_ok=True)
+
     client = grakn.Client(uri=uri, keyspace=keyspace)
 
     start_time = dt.datetime.now()

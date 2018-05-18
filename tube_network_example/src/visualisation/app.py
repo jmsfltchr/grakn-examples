@@ -155,7 +155,7 @@ class TubeGui:
 
     STATION_DEGREE_COLOUR = "#FAA"
     STATION_DEGREE_MAX_RADIUS = 10
-    STATION_DEGREE_KEY = "g"
+    STATION_DEGREE_KEY = "d"
 
     ROUTES_DEGREE_COLOUR = "#AFA"
     ROUTES_DEGREE_MAX_RADIUS = 8
@@ -164,6 +164,8 @@ class TubeGui:
     TUNNEL_SHORTEST_PATH_COLOUR = "#DDD"
     TUNNEL_SHORTEST_PATH_WIDTH = 10
     CLEAR_SHORTEST_PATH_KEY = "q"
+
+    CLEAR_ALL_KEY = "c"
 
     # Properties of the station connections drawn
     LINE_WIDTH = 2
@@ -348,12 +350,8 @@ class TubeGui:
         """
         print(graql_string)
         # Send the graql query to the server
-        try:
-            response = self.grakn_client.execute(graql_string)
-        except:
-            print("Ensure that Grakn server is running before attempting to start the visualisation")
-        else:
-            print("...query complete")
+        response = self.grakn_client.execute(graql_string)
+        print("...query complete")
         return response
 
     def _scan_start(self, event):
@@ -403,6 +401,8 @@ class TubeGui:
             self.display_centrality(query, self.ROUTES_DEGREE_MAX_RADIUS, self.ROUTES_DEGREE_COLOUR)
         elif event.char == self.CLEAR_SHORTEST_PATH_KEY:
             self.clear_shortest_path()
+        elif event.char == self.CLEAR_ALL_KEY:
+            self.clear_all()
 
     def _on_station_select(self, station_id):
         """
@@ -476,6 +476,10 @@ class TubeGui:
         """
         self._canvas.delete(*self._shortest_path_elements)
         self._shortest_path_stations = []
+
+    def clear_all(self):
+        self.clear_shortest_path()
+        self.undisplay_centrality()
 
     def zoom(self, direction):
         """
@@ -556,11 +560,16 @@ class TubeGui:
 
                     # Send the drawn elements to behind the station point
                     self._canvas.tag_lower(centrality_element_id, station_element_id)
-        else:
+        # else:
+        #     self.undisplay_centrality()
+        #
+        # self._displaying_centrality = not self._displaying_centrality
+
+    def undisplay_centrality(self):
+        if self._displaying_centrality:
             for concept_id, point_id in self._station_centrality_points.items():
                 self._canvas.delete(point_id)
-
-        self._displaying_centrality = not self._displaying_centrality
+            self._displaying_centrality = not self._displaying_centrality
 
 
 if __name__ == "__main__":
