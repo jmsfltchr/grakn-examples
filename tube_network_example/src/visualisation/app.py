@@ -560,6 +560,7 @@ class TubeGui:
 
                     # Send the drawn elements to behind the station point
                     self._canvas.tag_lower(centrality_element_id, station_element_id)
+            self._displaying_centrality = True
         # else:
         #     self.undisplay_centrality()
         #
@@ -569,7 +570,7 @@ class TubeGui:
         if self._displaying_centrality:
             for concept_id, point_id in self._station_centrality_points.items():
                 self._canvas.delete(point_id)
-            self._displaying_centrality = not self._displaying_centrality
+            self._displaying_centrality = False
 
 
 if __name__ == "__main__":
