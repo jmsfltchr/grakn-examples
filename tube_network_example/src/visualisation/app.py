@@ -327,11 +327,11 @@ class TubeGui:
             self._station_point_ids[station_id] = station_tag
 
             # We need to identify the station selected, so we should build a function for each station to hold this
-            def l(event, id=station_id): return self._on_station_select(id)
+            def callback_wrapper(event, id=station_id): return self._on_station_select(id)
 
             event_sequence = "<Shift-ButtonPress-1>"
 
-            self._canvas.tag_bind(self._station_point_ids[station_id], event_sequence, l)
+            self._canvas.tag_bind(self._station_point_ids[station_id], event_sequence, callback_wrapper)
 
             station_label_tag = self._canvas.create_text(lon + self.STATION_CIRCLE_RADIUS,
                                                          lat + self.STATION_CIRCLE_RADIUS,
@@ -561,10 +561,6 @@ class TubeGui:
                     # Send the drawn elements to behind the station point
                     self._canvas.tag_lower(centrality_element_id, station_element_id)
             self._displaying_centrality = True
-        # else:
-        #     self.undisplay_centrality()
-        #
-        # self._displaying_centrality = not self._displaying_centrality
 
     def undisplay_centrality(self):
         if self._displaying_centrality:
