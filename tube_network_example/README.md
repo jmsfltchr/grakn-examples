@@ -22,7 +22,7 @@ If you are already familiar with this then all you should need is `$ pip3 instal
 Otherwise, I recommend using virtualenv, to create an isolated environment.
 
 ## Downloading Data
-The data necessary to build a Grakn of the Tube Network is already included in this repo, the code to acquire it can be found in src/data/get_dataset.py
+The data necessary to build a Grakn of the Tube Network is already included in this repo, the code to acquire it can be found in src/data_acquisition/get_dataset.py
 
 ## Importing Data
 We can import this data into the Grakn keyspace we have just created. The name of the keyspace is set in settings.py, so you can change it there if you need to. You don't have to implement settings in this way in your own application.
