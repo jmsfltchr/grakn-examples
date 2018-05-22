@@ -126,3 +126,10 @@ From any state, press `c` to clear the map of analytics.
 So, you should be able to find the shortest path from some station _A_ to some station _E_, via stations _B_, _C_ and _D_.
 
 Use `q` to clear the shortest path(s), or `c` to remove anything that has been drawn on top of the map. 
+
+## Extra - Distances between Neighbouring Stations
+Also included is a src/data_acquisition/distance_between_stops.py that computes the as-the-crow-flies distance between pairs of stations, where that pair are related by at least one `tunnel`. 
+
+This could be useful for calculating the walking time between neighbouring stations, or approximating average speed of trains between stations, for example.
+
+The script performs this calculation and then adds the distance as an attribute of the `neighbourship` relationship. That relationship was inferred by the `neighbouring` rule, but at this point must be materialised in the database in order to attach the `distance` attribute.  
