@@ -23,8 +23,9 @@ def check_response_length(response, min_length=None, max_length=None):
     elif min_length is None and max_length is None:
         raise RuntimeError("No bounds set on response length")
 
-    elif min_length > max_length:
-        raise ValueError("Specified minimum length is greater than maximum length, which cannot be satisfied")
+    elif min_length is not None and max_length is not None:
+        if min_length > max_length:
+            raise ValueError("Specified minimum length is greater than maximum length, which cannot be satisfied")
 
 
 def _match(graql_body):

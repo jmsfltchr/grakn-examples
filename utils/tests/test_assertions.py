@@ -1,6 +1,6 @@
 import unittest
 
-from utils.assertions import check_response_length
+from utils.utils import check_response_length
 
 
 class TestCheckResponseLength(unittest.TestCase):
@@ -20,7 +20,7 @@ class TestCheckResponseLength(unittest.TestCase):
         with self.assertRaises(RuntimeError):
             check_response_length(response, min_length=1, max_length=1)
 
-    def no_max(self):
+    def test_no_max(self):
         response = [1, 2]
         check_response_length(response, min_length=1)
 
