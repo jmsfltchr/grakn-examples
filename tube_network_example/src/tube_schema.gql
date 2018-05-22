@@ -29,8 +29,6 @@ station sub entity,
     plays stop,
 	plays beginning,
 	plays end,
-    plays start,
-    plays finish,
     plays origin,
     plays destination,
 	plays contained-station,
@@ -59,8 +57,6 @@ route sub relationship,
 
 	# a West Ruislip to Epping route has a <route-line/route-operator> in the form of the Central Line
 	relates route-operator,
-
-    plays leg-route;
 
 
 route-section sub entity,
@@ -106,33 +102,11 @@ neighbourship sub relationship,
 	has distance;
 
 
-journey-leg sub relationship,
-    relates start,
-    relates finish,
-    relates leg-route;
-
-
-find-journey-leg sub rule,
-    when {
-        $s1 isa station;
-        $s2 isa station;
-        $rs isa route-section;
-        $t1(beginning: $s1, end: $s2, service: $rs) isa tunnel;
-        $r(section: $rs) isa route;
-    } then {
-        (start: $s1, finish: $s2, leg-route: $r) isa journey-leg;
-    };
-
-
-find-journey-leg-transitive sub rule,
-    when {
-        $s1 isa station;
-        $s2 isa station;
-        $s3 isa station;
-        $r isa route;
-        (start: $s1, finish: $s2, leg-route: $r) isa journey-leg;
-        (start: $s2, finish: $s3, leg-route: $r) isa journey-leg;
-    } then {
-        (start: $s1, finish: $s3, leg-route: $r) isa journey-leg;
-        # When we can do arithmetic then we'll be able to add up the time taken also
-    };
+neighbouring sub rule,
+	when {
+		$s1 isa station;
+		$s2 isa station;
+		($s1, $s2) isa tunnel;
+	} then {
+		(neighbour: $s1, neighbour: $s2) isa neighbourship;
+	}

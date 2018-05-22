@@ -29,6 +29,7 @@ def import_query_generator(perform_query, timetables_dir_path):
     :return:
     """
 
+    # Get the locations of the downloaded timetable json data
     timetable_paths = os.listdir(timetables_dir_path)
 
     station_query = "$s1 isa station, has naptan-id \"{}\";"

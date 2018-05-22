@@ -14,7 +14,6 @@ def url_data_to_file(url, write_filename):
     """
     with urlopen(url, context=ssl.SSLContext()) as f:
         decoded_response = f.read().decode()
-        # print(decoded_response)
         with open(write_filename, "w") as output_file:
             output_file.write(decoded_response)
 
@@ -95,9 +94,12 @@ if __name__ == "__main__":
              "victoria",
              "waterloo-city"]
 
+    # Iterate over all of the above tube lines to retrieve the routes on that line
     for line in lines:
         dl_route_from_api(line, settings.routes_path)
 
+    # Read the routes just downloaded, and look up the timetable information the origin station of each route. The only
+    # way to retrieve a timetable is by specifying an origin.
     all_route_info = get_route_info(lines, settings.routes_path)
     for ri in all_route_info:
         dl_timetable_from_api(ri.line, ri.origin, ri.direction, settings.timetables_path)
