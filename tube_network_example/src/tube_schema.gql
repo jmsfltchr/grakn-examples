@@ -22,17 +22,17 @@ duration sub attribute datatype long;
 distance sub attribute datatype double;
 
 station sub entity,
-    plays stop,
+	plays stop,
 	plays beginning,
 	plays end,
-    plays origin,
-    plays destination,
+	plays origin,
+	plays destination,
 	plays contained-station,
 	plays neighbour,
 	has naptan-id,
-    has name,
-    has lat,
-    has lon;
+	has name,
+	has lat,
+	has lon;
 
 # Try using this sentence to formulate the structure of a relationship:
 # A <relationship> has a <role> in the form of a <subject> (<subject> is any concept, which could be an entity, relationship, or attribute)
