@@ -20,38 +20,36 @@ if __name__ == "__main__":
     client = grakn.Client(uri=settings.uri, keyspace=settings.keyspace)
 
     def perform_query(graql_string):
-        print(graql_string)
+        """
+        Just a wrapper function to print the graql query before sending it to the Grakn server.
+        :param graql_string: query string
+        :return: response from Grakn server
+        """
+        print("QUERY: {}".format(graql_string))
         # Send the graql query to the server
         response = client.execute(graql_string)
         return response
 
-    def perform_analytics(op, concepts, attribute=""):
-        if attribute != "":
-            attribute = "of {}, ".format(attribute)
-
-        query = "compute {} {}in {};".format(op, attribute, concepts)
-        response = perform_query(query)
-        print("{} of {}s: {}".format(op, concepts, response))
-        return response
-
     # count
     # Find the number of stations, routes, tube lines, zones, etc.
-    v = "station"
-    op = "count"
-    perform_analytics(op, v)
-    print("-----")
-
-    # max
-    v = "route-section"
-    op = "max"
-    perform_analytics(op, v, "duration")
+    response = perform_query("compute count in station;")
+    print(response)
     print("-----")
 
     # min
-    v = "route-section"
-    op = "min"
-    min_duration = perform_analytics(op, v, "duration")
-    # Now we have the minimum duration we can query to find where in the graph this occurs
+    response = perform_query("compute min of duration, in route-section;")
+    print(response)
+    print("-----")
+
+    # min again
+    response = perform_query("compute min of lat, in station;")
+    print(response)
+    print("-----")
+
+    # max
+    max_duration = perform_query("compute max of duration, in route-section;")
+    print(max_duration)
+    # Now we have the maximum duration we can query to find where in the graph this occurs
     match_query = ("match\n"
                    "$s1 isa station, has name $s1-name;\n"
                    "$s2 isa station, has name $s2-name;\n"
@@ -61,15 +59,39 @@ if __name__ == "__main__":
                    "$t(beginning: $s1, end: $s2, service: $rs) isa tunnel;\n"
                    "$tl isa tube-line, has name $tl-name;"
                    "$r(section: $rs, origin: $o, destination: $d, route-operator: $tl) isa route;\n"
-                   "get $s1-name, $s2-name, $o-name, $d-name, $tl-name;").format(min_duration)
+                   "get $s1-name, $s2-name, $o-name, $d-name, $tl-name;").format(max_duration)
     response = perform_query(match_query)
 
+    print("-")
+    print("Answer:")
     for m in response:
         print("Tunnel from {} to {}, via {} line, on the route going from {} to {}".format(
             m['s1-name']['value'], m['s2-name']['value'], m['tl-name']['value'], m['o-name']['value'],
             m['d-name']['value']))
     print("-----")
+
     # mean
+    response = perform_query("compute mean of duration, in route-section;")
+    print(response)
+    print("-----")
+
     # median
+    response = perform_query("compute median of duration, in route-section;")
+    print(response)
+    print("-----")
+
     # std
+    response = perform_query("compute std of duration, in route-section;")
+    print(response)
+    print("-----")
+
     # sum
+    # Find the sum duration of all of the route-sections that comprise a route. This query makes use of aggregation.
+    query = (
+        "match $s1 isa station has name \"Ealing Broadway Underground Station\"; $s2 isa station has name \"Upminster "
+        "Underground Station\"; $rs isa route-section has duration $d; $r(origin: $s1, destination: $s2, "
+        "section: $rs) isa route; aggregate sum $d;")
+    print("QUERY: {}".format(query))
+    route_duration = client.execute(query)
+    print("Route duration: {}".format(route_duration))
+    print("-----")

@@ -96,6 +96,22 @@ limit 30; get $n1, $n2, $tl-name, $d;
 ```
 Remember that in the console your query can only occupy one line. In the dashboard or via a client this isn't the case.
 
+## Statistics and Aggregation
+src/statistics.py gives some quick examples of how you can use this Grakn functionality to analyse the network.
+
+Run from the `grakn_examples` root directory as:
+```bash
+python -m tube_network_example.src.statistics
+```
+
+## Journey Planner
+src/journey_planner.py demonstrates the basics of computing shortest path(s), which is elaborated in the visualisation example.
+
+Run from the `grakn_examples` root directory as:
+```bash
+python -m tube_network_example.src.journey_planner
+```
+
 ## Analytics - Tube Map Visualisation
 Here we've built a basic demo application to show the analytics capabilities built into Grakn.
 
