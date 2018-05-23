@@ -32,21 +32,23 @@ if __name__ == "__main__":
     # ./grakn server engine stop
     # ./grakn server engine start
 
+    # Choose whether to find paths via the fewest stations, or via the fewest changes between routes
     FEWEST_STOPS = 0
     FEWEST_ROUTES = 1
-    method = FEWEST_STOPS
+    score_by = FEWEST_STOPS
 
     a_id = get_match_id(client.execute(match_get("$s1 isa station, has name \"{}\";".format(a_name))), "s1")
     b_id = get_match_id(client.execute(match_get("$s1 isa station, has name \"{}\";".format(b_name))), "s1")
 
-    if method == FEWEST_STOPS:
+    if score_by == FEWEST_STOPS:
         compute_query = "compute path from {}, to {}, in [station, tunnel];".format(a_id, b_id)  # Fewest stops
-    elif method == FEWEST_ROUTES:
+    elif score_by == FEWEST_ROUTES:
         compute_query = "compute path from {}, to {}, in [station, route];".format(a_id, b_id)  # Fewest changes
+    else:
+        raise ValueError("No method has been selected")
     print("Finding shortest paths...")
     shortest_paths = client.execute(compute_query)
     print("...done")
-    # print(shortest_paths)
 
     # The response contains the different permutations for each path through stations. We are mainly interested in
     # which stations the path passes through
