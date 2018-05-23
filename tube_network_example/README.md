@@ -125,7 +125,9 @@ From any state, press `c` to clear the map of analytics.
 
 So, you should be able to find the shortest path from some station _A_ to some station _E_, via stations _B_, _C_ and _D_.
 
-Use `q` to clear the shortest path(s), or `c` to remove anything that has been drawn on top of the map. 
+Use `q` to clear the shortest path(s), or `c` to remove anything that has been drawn on top of the map.
+
+Grakn 1.2 returns all paths between stations, rather than a graph to represent those paths. Practically this means that there is a limit on the path length we can examine with this code at present. As a result of researching this kind of use-case, very soon we will be adding functionality to retrieve a graph from `compute path`, at which point we'll be able to plan long routes. 
 
 ## Extra - Distances between Neighbouring Stations
 Also included is a src/data_acquisition/distance_between_stops.py that computes the as-the-crow-flies distance between pairs of stations, where that pair are related by at least one `tunnel`. 
