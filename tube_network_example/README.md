@@ -22,23 +22,23 @@ If you are already familiar with this then all you should need is `$ pip3 instal
 Otherwise, I recommend using virtualenv, to create an isolated environment.
 
 ## Downloading Data
-The data necessary to build a Grakn of the Tube Network is already included in this repo, the code to acquire it can be found in src/data_acquisition/download_dataset.py
+The data necessary to build a Grakn of the Tube Network is already included in this repo, the code to acquire it can be found in [src/data_acquisition/download_dataset.py](src/data_acquisition/download_dataset.py)
 
 ## Importing Data
 We can import this data into the Grakn keyspace we have just created. The name of the keyspace is set in settings.py, so you can change it there if you need to. You don't have to implement settings in this way in your own application.
 
 Check Grakn is up and running: `./grakn server status`
 
-To import, run timetable_migration.py, either in your IDE, or from the grakn_examples directory as follows:
+To import, run [timetable_migration.py](src/migrations/timetable_migration.py), either in your IDE, or from the grakn_examples directory as follows:
 ```bash
 python -m tube_network_example.src.migrations.timetable_migration
 ```
 
 This is a custom-built python script that just iterates over the downloaded json data.   
 
-You should see insertions being made into the Grakn, the logs for this are in src/migrations/logs, showing the graql query sent, and the response received.
+You should see insertions being made into the Grakn, the logs for this will be created in src/migrations/logs, showing the graql query sent, and the response received.
 
-Once complete, you have stored tube network data in Grakn!
+Once complete, you have stored the tube network data in Grakn!
 
 Now you're ready to start playing with the data.
 
@@ -63,7 +63,7 @@ match $x isa station, has name "Green Park Underground Station"; get;
 #### Dashboard
 To start the visualiser, open a browser and navigate to `http://localhost:4567`
 
-In the Keyspace dropdown box at the top-right, select `tube_example` 
+In the Keyspace dropdown box in the top-right corner, select `tube_example` 
 
 Then try:
 
@@ -97,7 +97,7 @@ limit 30; get $n1, $n2, $tl-name, $d;
 Remember that in the console your query can only occupy one line. In the dashboard or via a client this isn't the case.
 
 ## Statistics and Aggregation
-src/statistics.py gives some quick examples of how you can use this Grakn functionality to analyse the network.
+[src/statistics.py](src/statistics.py) gives some quick examples of how you can use this Grakn functionality to analyse the network.
 
 Run from the `grakn_examples` root directory as:
 ```bash
@@ -105,7 +105,7 @@ python -m tube_network_example.src.statistics
 ```
 
 ## Journey Planner
-src/journey_planner.py demonstrates the basics of computing shortest path(s), which is elaborated in the visualisation example.
+[src/journey_planner.py](src/journey_planner.py) demonstrates the basics of computing shortest path(s), which is elaborated in the visualisation example.
 
 Run from the `grakn_examples` root directory as:
 ```bash
@@ -115,7 +115,7 @@ python -m tube_network_example.src.journey_planner
 ## Analytics - Tube Map Visualisation
 Here we've built a basic demo application to show the analytics capabilities built into Grakn.
 
-Run the visualisation as from the `grakn_examples` root directory as:
+Run [src/visualisation/app.py](src/visualisation/app.py) from the `grakn_examples` root directory as:
 ```bash
 python -m tube_network_example.src.visualisation.app
 ``` 
@@ -146,7 +146,7 @@ Use `q` to clear the shortest path(s), or `c` to remove anything that has been d
 Grakn 1.2 returns all paths between stations, rather than a graph to represent those paths. Practically this means that there is a limit on the path length we can examine with this code at present. As a result of researching this kind of use-case, very soon we will be adding functionality to retrieve a graph from `compute path`, at which point we'll be able to plan long routes. 
 
 ## Extra - Distances between Neighbouring Stations
-Also included is a src/data_acquisition/distance_between_stops.py that computes the as-the-crow-flies distance between pairs of stations, where that pair are related by at least one `tunnel`. 
+Also included is [src/data_acquisition/distance_between_stops.py](src/data_acquisition/distance_between_stops.py) that computes the as-the-crow-flies distance between pairs of stations, where that pair are related by at least one `tunnel`. 
 
 This could be useful for calculating the walking time between neighbouring stations, or approximating average speed of trains between stations, for example.
 
