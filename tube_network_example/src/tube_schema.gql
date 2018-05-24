@@ -43,7 +43,7 @@ route sub relationship,
 	relates stop,
 	relates origin as stop,
 	relates destination as stop,
-	relates route-operator,
+	relates route-operator;
 
 route-section sub entity,
 	plays section,
@@ -75,4 +75,4 @@ neighbouring sub rule,
 		($s1, $s2) isa tunnel;
 	} then {
 		(neighbour: $s1, neighbour: $s2) isa neighbourship;
-	}
+	};
