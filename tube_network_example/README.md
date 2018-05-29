@@ -2,8 +2,33 @@
 
 Here we demonstrate a way of modelling the London Underground Network using data acquired from the Transport for London (TFL) website. 
 
-All of the code given here is written in Python, to give an example of how to use the Grakn Python client.
+Most of the code given here is written in Python to give an example of how to use the Grakn Python client.
 
+See the quickstart for how to get going immediately, or read on for more info.
+
+## Quickstart
+If you're already familiar with Grakn and Python 3 and want to get going fast:
+
+You may need to use `python` or `python3` depending on your environment.
+
+```bash
+$ pip install grakn
+$ cd [your-grakn-installation]
+$ ./graql console -f ./tube_network_example/src/tube_schema.gql -k tube_example
+$ python -m tube_network_example.src.migrations.timetable_migration
+```
+
+Querying Grakn: `./graql console -k tube_example` then `match $x isa station, has name "Covent Garden Underground Station"; get;`
+
+Fundamental statistics: `python -m tube_network_example.src.statistics`
+
+Basic Journey Planner `python -m tube_network_example.src.journey_planner`
+
+Analytics and Journey Planner - Visualization `$ python -m tube_network_example.src.visualisation.app`
+
+For further explanation on each point please see below.
+
+## Grakn Setup
 Before you can use the example, you'll need a Grakn server running. To do this, try following the [Setup Guide](https://dev.grakn.ai/docs/get-started/setup-guide).
 
 we need to tell Grakn the schema elements to build. In general you can do this using the graql console, but to add a whole schema it's easier to pass this to Grakn as a .gql file.
@@ -79,6 +104,7 @@ import grakn
 client = grakn.Client(uri='http://localhost:4567', keyspace='tube_example')
 response = client.execute('match $x isa station, has name "Green Park Underground Station"; get;')
 ```
+
 
 
 ## Reasoning
