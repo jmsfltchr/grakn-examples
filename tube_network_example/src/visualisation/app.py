@@ -339,7 +339,7 @@ class TubeGui:
                                                          font=('Johnston', self.STATION_FONT_SIZE, 'bold'),
                                                          fill="#666")
             station_name_labels[station_id] = station_label_tag
-            self._canvas.tag_bind(station_label_tag, event_sequence, l)
+            self._canvas.tag_bind(station_label_tag, event_sequence, callback_wrapper)
 
     def perform_query(self, graql_string):
         """
