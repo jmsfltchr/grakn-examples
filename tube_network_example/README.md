@@ -9,7 +9,7 @@ See the quickstart for how to get going immediately, or read on for more info.
 ## Quickstart
 If you're already familiar with Grakn and Python 3 and want to get going fast:
 
-You may need to use `python` or `python3` depending on your environment.
+You may need to use the command `python` or `python3` depending on your environment.
 
 ```bash
 $ pip install grakn
