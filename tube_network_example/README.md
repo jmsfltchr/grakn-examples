@@ -14,7 +14,7 @@ You may need to use the command `python` or `python3` depending on your environm
 ```bash
 $ pip install grakn
 $ cd [your-grakn-installation]
-$ ./graql console -f ./tube_network_example/src/tube_schema.gql -k tube_example
+./graql console -f [path-to-grakn_examples]/grakn_examples/tube_network_example/src/tube_schema.gql -k tube_example
 $ python -m tube_network_example.src.migrations.timetable_migration
 ```
 
@@ -31,7 +31,7 @@ For further explanation on each point please see below.
 ## Grakn Setup
 Before you can use the example, you'll need a Grakn server running. To do this, try following the [Setup Guide](https://dev.grakn.ai/docs/get-started/setup-guide).
 
-we need to tell Grakn the schema elements to build. In general you can do this using the graql console, but to add a whole schema it's easier to pass this to Grakn as a .gql file.
+We need to tell Grakn the schema elements to build. In general you can do this using the graql console, but to add a whole schema it's easier to pass this to Grakn as a .gql file.
 Once Grakn is running on your machine, open up a console and cd into the root directory of your Grakn installation (if you aren't there already).
 Then run the following to create a keyspace called `tube_example` and add the schema to it:
 ```bash
@@ -151,6 +151,12 @@ Now you can use a few keyboard shortcuts to see analytics in action. The applica
 
 #### Centrality
 Keymap:
+
+Drag mouse to pan
+
+`=`/`+` to zoom in
+
+`-`/`_` to zoom out
 
 `d` - `compute centrality of station, in [station, tunnel], using degree;`
 
