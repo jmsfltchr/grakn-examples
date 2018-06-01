@@ -6,27 +6,42 @@ Most of the code given here is written in Python to give an example of how to us
 
 See the quickstart for how to get going immediately, or read on for more info.
 
+
 ## Quickstart
-If you're already familiar with Grakn and Python 3 and want to get going fast:
+Use this quickstart to get up and running fast, or read on for more detailed information on each element.
 
-You may need to use the command `python` or `python3` depending on your environment.
-
+Download Grakn and the Python client:
 ```bash
-$ pip install grakn
-$ cd [your-grakn-installation]
-./graql console -f [path-to-grakn_examples]/grakn_examples/tube_network_example/src/tube_schema.gql -k tube_example
-$ python -m tube_network_example.src.migrations.timetable_migration
+$ mkdir grakn_examples_root && cd grakn_examples_root
+grakn_examples_root $ wget https://github.com/graknlabs/grakn/releases/download/v1.2.0/grakn-dist-1.2.0.tar.gz
+grakn_examples_root $ tar -xf grakn-dist-1.2.0.tar.gz
+grakn_examples_root $ pip install grakn
+```
+Clone the tube network example:
+```bash
+grakn_examples_root $ git clone https://github.com/graknlabs/grakn_examples.git
 ```
 
-Querying Grakn: `./graql console -k tube_example` then `match $x isa station, has name "Covent Garden Underground Station"; get;`
+Import the tube network data into Grakn:
+```bash
+grakn_examples_root $ ./grakn-dist-1.2.0/graql console -f ./grakn_examples/tube_network_example/src/tube_schema.gql -k tube_example
+grakn_examples_root $ cd grakn_examples/
+grakn_examples $ python -m tube_network_example.src.migrations.timetable_migration
+```
+(Henceforth you may need to use the command `python` or `python3` depending on your environment.)
 
-Fundamental statistics: `python -m tube_network_example.src.statistics`
+To query Grakn, start a Graql console: 
+`grakn_examples_root $./graql console -k tube_example`
+then query:
+`>>> match $x isa station, has name "Covent Garden Underground Station"; get;`
 
-Basic Journey Planner `python -m tube_network_example.src.journey_planner`
+Fundamental statistics: `grakn_examples $ python -m tube_network_example.src.statistics`
 
-Analytics and Journey Planner - Visualization `$ python -m tube_network_example.src.visualisation.app`
+Basic Journey Planner `grakn_examples $ python -m tube_network_example.src.journey_planner`
 
-For further explanation on each point please see below.
+Analytics and Journey Planner - Visualization `grakn_examples $ python -m tube_network_example.src.visualisation.app`
+
+Stuck somewhere? Read on for more info on each of the parts above.
 
 ## Grakn Setup
 Before you can use the example, you'll need a Grakn server running. To do this, try following the [Setup Guide](https://dev.grakn.ai/docs/get-started/setup-guide).
@@ -35,7 +50,7 @@ We need to tell Grakn the schema elements to build. In general you can do this u
 Once Grakn is running on your machine, open up a console and cd into the root directory of your Grakn installation (if you aren't there already).
 Then run the following to create a keyspace called `tube_example` and add the schema to it:
 ```bash
-./graql console -f [path-to-grakn_examples]/grakn_examples/tube_network_example/src/tube_schema.gql -k tube_example
+grakn_examples_root $ ./grakn-dist-1.2.0/graql console -f [path-to-grakn_examples]/grakn_examples/tube_network_example/src/tube_schema.gql -k tube_example
 ```
 If successful, you should see the response: `{}`.
 
@@ -56,7 +71,7 @@ Check Grakn is up and running: `./grakn server status`
 
 To import, run [timetable_migration.py](src/migrations/timetable_migration.py), either in your IDE, or from the grakn_examples directory as follows:
 ```bash
-python -m tube_network_example.src.migrations.timetable_migration
+grakn_examples $ python -m tube_network_example.src.migrations.timetable_migration
 ```
 
 This is a custom-built python script that just iterates over the downloaded json data.   
@@ -76,13 +91,13 @@ There are several ways to query your newly built knowledge base:
 #### Graql Console
 To start a graql console, run the following in the root of your running Grakn installation:
 ```bash
-./graql console -k tube_example
+grakn_examples_root $ ./grakn-dist-1.2.0/graql console -k tube_example
 ```
 Here `tube_example` is the keyspace into which we loaded the data.
 
 Then try:
 ```bash
-match $x isa station, has name "Green Park Underground Station"; get;
+>>> match $x isa station, has name "Green Park Underground Station"; get;
 ``` 
 
 #### Dashboard
@@ -93,7 +108,7 @@ In the Keyspace dropdown box in the top-right corner, select `tube_example`
 Then try:
 
 ```bash
-match $x isa station, has name "Green Park Underground Station"; get;
+>>> match $x isa station, has name "Green Park Underground Station"; get;
 ``` 
 
 
@@ -111,7 +126,7 @@ response = client.execute('match $x isa station, has name "Green Park Undergroun
 Now you can query the database, you can try asking more complex questions, like asking for time between stations of over 8 minutes:
 ```bash
 # Which stops take over 8 minutes?
-match
+>>> match
 $s1 isa station, has name $n1;
 $s2 isa station, has name $n2;
 (beginning: $s1, end: $s2, service: $rs) isa tunnel;
@@ -127,7 +142,7 @@ Remember that in the console your query can only occupy one line. In the dashboa
 
 Run from the `grakn_examples` root directory as:
 ```bash
-python -m tube_network_example.src.statistics
+grakn_examples $ python -m tube_network_example.src.statistics
 ```
 
 ## Journey Planner
@@ -135,7 +150,7 @@ python -m tube_network_example.src.statistics
 
 Run from the `grakn_examples` root directory as:
 ```bash
-python -m tube_network_example.src.journey_planner
+grakn_examples $ python -m tube_network_example.src.journey_planner
 ```
 
 ## Analytics - Tube Map Visualisation
@@ -143,7 +158,7 @@ Here we've built a basic demo application to show the analytics capabilities bui
 
 Run [src/visualisation/app.py](src/visualisation/app.py) from the `grakn_examples` root directory as:
 ```bash
-python -m tube_network_example.src.visualisation.app
+grakn_examples $ python -m tube_network_example.src.visualisation.app
 ``` 
 This may take a couple of minutes to query the database for all of the necessary information and build the network map.
 
